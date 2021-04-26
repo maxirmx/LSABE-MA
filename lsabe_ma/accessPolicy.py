@@ -12,20 +12,6 @@ class accessPolicy:
         self._n = 2                     # The number of columns
         self._l = 5                     # The number of rows (security attributes)
 
-#   ... Security attributes ...
-#   Security attribute is an abstraction representing the basic properties or characteristics of an entity with respect 
-#   to safeguarding information; typically associated with internal data structures (e.g., records, buffers, files) within 
-#   the information system which are used to enable the implementation of access control and flow control policies; 
-#   reflect special dissemination, handling, or distribution instructions; or support other aspects of the information 
-#   security policy. [NIST SP 800-53 Rev. 4]
-        self._S = [
-            "Security attribute #0",
-            "Security attribute #1",
-            "Security attribute #2",
-            "Security attribute #3",
-            "Security attribute #4"
-        ]
-
     @property
     def n(self):
         return self._n
@@ -33,11 +19,6 @@ class accessPolicy:
     @property
     def l(self):
         return self._l
-
-    @property
-    def S(self):
-        return self._S
-
 
 #  For testing simplicty I assume that A(i,0) = 1, A(i,j)=0 if j!=0 for any i
 #  So no matrix is stored, I just generate a value as required 
@@ -48,9 +29,9 @@ class accessPolicy:
         return 0
 
 # p - the function that associates rows of A with the (security?) attributes
-# i - row of A, we return associated security attribute which is always "full access" 
+# i - row of A, we return associated security attribute  
     def p(self,i):
-        return self._S[i] 
+        return i 
 
 # A helper for lsabe.encrypt
 # Choose a random s∈Zp and a random vector v∈Znp with s as its first entry.

@@ -29,7 +29,7 @@ def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
     print('authority-' + str(authority_id) + ' attributes and keys successfully loaded.')
     return lsabe_auth
 
-def chekGIDorExit(GID)
+def chekGIDorExit(GID):
     if GID is None or not GID:
         print('No user identifier is provided. All LSABE-MA actions other then initialization are executed against specific user'
               '--GID "user-1" will be good enouph.')
@@ -78,7 +78,7 @@ def startup():
             lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
             lsabe_auth.AuthoritySetup(args.attributes)
         except:
-            print('Failed to store authority-' + str(args.authority_id) + ' attributes and keys to ' + key_path)
+            print('Failed to store authority-' + str(args.authority_id) + ' attributes and keys to ' + str(key_path))
             farewell()
         print('authority-' + str(args.authority_id) + ' attributes and keys saved to ' + str(key_path))
 
@@ -97,7 +97,6 @@ def startup():
         try:
             sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
             lsabe_auth.serialize__SK(SK, sk_fname)
-            lsabe_auth.deserialize__SK(sk_fname)
         except:
             print('Failed to store SK to ' + str(sk_fname))
             farewell()
@@ -124,21 +123,12 @@ def startup():
                     'Please provide at least one keyword. --kwd keyword will be good enouph')
             farewell()
 
-        try:
-            sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
-            SK = lsabe_auth.deserialize__SK(sk_fname)
-        except:
-            print('Failed to load SK from ' + str(sk_fname))
-            farewell()
-        print('SK loaded from ' + str(sk_fname))
-
-
         ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
         ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
 
         print('Message: \'' + str(args.message) + '\'' )    
         print('Keywords: ' + str(args.keywords))    
-#        CT = lsabe.EncryptAndIndexGen( args.message, args.keywords)
+        CT = lsabe_auth.EncryptAndIndexGen( args.message, args.keywords)
 #        try:
 #           lsabe.serialize__CT(CT, ct_fname)
 #        except:

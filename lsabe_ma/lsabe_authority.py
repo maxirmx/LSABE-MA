@@ -40,12 +40,12 @@ class LSABE_AUTH(LSABE_MA):
         self._APK = ()
         for attr in attrs:
             ATTi = attr 
-            a, y = random.randrange(sys.maxsize), random.randrange(sys.maxsize)
+            alfa, y = random.randrange(sys.maxsize), random.randrange(sys.maxsize)
             beta = self.group.random(ZR)
 
-            ASKi = {'alfa': random.randrange(sys.maxsize), 'y': random.randrange(sys.maxsize), 'beta': self.group.random(ZR) }
+            ASKi = {'alfa': alfa, 'y': y, 'beta': beta }
 
-            APKi = { 'e(gg)^a' : pair(self._PP['g'], self._PP['g']) ** a, 'g**y': self._PP['g']**y, 'g**beta': self._PP['g']**beta }
+            APKi = { 'e(gg)^alfa' : pair(self._PP['g'], self._PP['g']) ** alfa, 'g**y': self._PP['g']**y, 'g**beta': self._PP['g']**beta }
 
             self._ATT = self._ATT + (ATTi, )
             self._ASK = self._ASK + (ASKi, )
@@ -109,7 +109,7 @@ class LSABE_AUTH(LSABE_MA):
             self._ASK = self._ASK + (ASKi, )
             
             APKi = {}
-            APKi['e(gg)^a'], APKi['g**y'], APKi['g**beta'] = apk_f.g_val(3)  
+            APKi['e(gg)^alfa'], APKi['g**y'], APKi['g**beta'] = apk_f.g_val(3)  
             self._APK = self._APK + (APKi, )
 
 #        print("Authority attributes:")
@@ -203,32 +203,36 @@ class LSABE_AUTH(LSABE_MA):
         v = self._ap.randVector()
         s = v[0]
 
-        I0 = self._PP['g'] ** b
-        I1 = self._PP['g'] ** (self._MSK['lambda']*b)
-        I2 = self._PP['g'] ** s
-        I4 = self._PP['g'] ** rho1
+        g = self._PP['g']
 
+        I0 = g ** b
+        I1 = g ** (self._MSK['lambda']*b)
+        I2 = g ** s
+        I3 = g ** rho1
+        I  = ()
+        I4 = ()
+        E2 = ()
+        for i in range(len(self._ATT)):
+            ASKpi = self._ASK[self._ap.p(i)]
+            APKpi = self._APK[self._ap.p(i)]
+            Ii = UpsilonWithHook * ( ( APKpi['e(gg)^alfa'] )**s ) 
+            I4i = ( g **(ASKpi['beta'] * self._ap.lmbda(i,v)) ) * ( g ** (rho1 * ASKpi['y'])) 
+# ..................................................................The article says:  ** -rho1          
+# .................................................................. but it is definetely a mistake 
+            E2i = (APKpi['e(gg)^alfa'])**(b*rho1)
+
+            I  = I  + (Ii, )
+            I4 = I4 + (I4i, )
+            E2 = E2 + (E2i, )
+        
         E1 = pair(self._PP['g'], self._PP['f']) ** rho1
 
         I5 = ( )
-        for i in range(0, self._ap.l):  
-            I5 = I5 + ( (self._PP['g^beta'] ** self._ap.lmbda(i,v)) * (self.group.hash(self._ap.p(i), G1) ** rho1), )
-# ........................................................................ The article says:  ** -rho1          
-# ........................................................................ but it is definetely a mistake 
-
-
-
-
-        I = UpsilonWithHook * (pair(self._PP['g'], self._PP['g']) ** (self._MSK['alfa']*s))
-
-
-
-        I6 = ( )
         for eta_j in eta:
-            I6 = I6 + ((rho1 ** (-1)) * eta_j,  )
+            I5 = I5 + ((rho1 ** (-1)) * eta_j,  )
 
 
-#       print("Ciphertext: ")
-#       print((I, I1, I2, I3, I4, I5, I6, E, CM))
+        print("Ciphertext: ")
+        print((I, I0, I1, I2, I3, I4, I5, E1, E2, CM))
 
-        return (I, I1, I2, I3, I4, I5, I6, E, CM)
+        return (I, I0, I1, I2, I3, I4, I5, E1, E2, CM)

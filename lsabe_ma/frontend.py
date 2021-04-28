@@ -7,7 +7,7 @@ import functools
 import random
 import string
 from .arguments import arguments_setup, dir_create
-from .lsabe_ma import LSABE_MA
+from .lsabe_ma import LSABE_MA, LSABE_AUTH
 
 def farewell():
         print('Exiting ... To get help please run python -m lsabe-ma --help.')
@@ -19,8 +19,8 @@ def startup():
     parser = arguments_setup(MAX_KEYWORDS)
     args = parser.parse_args()
 
-    if (not args.global_setup_flag and not args.keygen_flag and not args.encrypt_flag and not args.search_flag):
-        print('Nothing to do. Specify either --global-setup or --keygen or --encrypt or --search.')
+    if (not args.global_setup_flag and not args.authority_setup_flag and not args.keygen_flag and not args.encrypt_flag and not args.search_flag):
+        print('Nothing to do. Specify either --global-setup or --authority-setup or --keygen or --encrypt or --search.')
         farewell()
 
     key_path = args.key_path
@@ -31,21 +31,44 @@ def startup():
 # MSK and PP are requied always
 # So we either generate them (SystemInit) or load from files (SystemLoad)
     if args.global_setup_flag:
-        print('Executing GlobalSetup (κ)→(PP,MSK)')
+        print('Executing GlobalSetup (κ)→(PP,MSK) ...')
         try:
             lsabe_ma.GlobalSetup()
         except:
             print('Failed to store MSK and PP to ' + lsabe_ma.msk_fname +' and ' + lsabe_ma.pp_fname)
             farewell()
         print('MSK and PP saved to ' + lsabe_ma.msk_fname +' and ' + lsabe_ma.pp_fname)
-    else:
-        print('Loading master security key (MSK) and public properies (PP) from ' + lsabe_ma.msk_fname +' and ' + lsabe_ma.pp_fname)
-        try:
-            lsabe_ma.SystemLoad()
-        except:
-            print('Failed to load MSK and PP')
+
+    if args.authority_setup_flag:
+        print('Executing AuthoritySetup (PP)→(APK(i,j),ASK(i,j)) ...')
+
+        if args.authority_id is None:
+            print('--authority-setup flag is set but authority id was specified.')
+            farewell()        
+        if len(args.attributes) == 0:
+            print('--authority-setup flag is set but no security attributes are provided. '
+                    'Each authority shall manage at least one security attribute. --sec-attr attribute will be good enouph.')
             farewell()
-        print('MSK and PP loaded succesfully')
+        
+        print('Using master security key (MSK) and public properies (PP) at ' + str(key_path))
+
+        try:
+            lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
+            lsabe_auth.AuthoritySetup(args.attributes)
+        except:
+            print('Failed to store authority attributes and keys to ' + key_path)
+            farewell()
+        print('Authority attributes and keys saved to ' + str(key_path) + ' with prefix authority-' + str(args.authority_id))
+
+  
+    print('Loading authority attributes and keys from ' + str(key_path) + ' with prefix authority-' + str(args.authority_id))
+#    try:
+    lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
+    lsabe_auth.AuthorityLoad()
+#    except:
+#        print('Failed to load authority attributes and keys.')
+#        farewell()
+#    print('Authority attributes and keys successfully loaded.')
 
 # SK and TK generation
     if (args.keygen_flag):

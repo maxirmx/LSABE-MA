@@ -9,7 +9,8 @@
             "type": "python",
             "request": "launch",
             "module": "lsabe_ma",
-            "args": ["--global-setup"]
+//            "args": ["--global-setup"]
+            "args": ["--authority-setup", "--authority-id", "1", "--sec-attr", "attribute1", "attribute2"]
         }
     ]
 }

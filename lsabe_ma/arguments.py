@@ -14,7 +14,8 @@ def arguments_setup(max_kwd):
         fromfile_prefix_chars   =   '@',
         epilog                  =   
         '''Suggested initial test call sequence:
-           python -m lsabe --init 
+           python -m lsabe_ma --global-setup
+           python -m lsabe_ma --authority-setup --authority-id 1 --sec-attr "attribute-1" "attribute-2"
            python -m lsabe --keygen
            python -m lsabe --encrypt --msg "Searchable encryption is good" --kwd Searchable encryption 
            python -m lsabe --encrypt --msg "This is unrelated message" --kwd unrelated message
@@ -28,6 +29,26 @@ def arguments_setup(max_kwd):
                         action      =   'store_true',
                         help        =   'Generate MSK and PP files (CAUTION! NO CHECKS BEFORE OVERWRITE!) ' + 
                                         'If this flag is not set, MSK and PP are loaded from the files.'
+    )
+
+    parser.add_argument('--authority-setup', 
+                        dest        =   'authority_setup_flag', 
+                        action      =   'store_true',
+                        help        =   'Generates attributes\' SK and PK files for the attributes managed by authority (CAUTION! NO CHECKS BEFORE OVERWRITE!)'
+    )
+
+    parser.add_argument('--authority-id', 
+                        dest        =   'authority_id', 
+                        type        =   int,
+                        help        =   'Authority identifier (integer)'
+    )
+
+    parser.add_argument('--sec-attr', 
+                        nargs       =   '+',     
+                        dest        =   'attributes',
+                        metavar     =   '<security attributes>',
+                        default     =   [],
+                        help        =   'Security attributes. Multiply attributes are supported, e.g.: --kwd attribute1 attribute2'
     )
 
     parser.add_argument('--key-path',  

@@ -31,6 +31,11 @@ class SER():
         self.__file.write(b' ')
         return self
 
+    def p_size(self, sz):
+        self.__file.write(b'%(len)04d' %{b"len":  sz} )
+        self.__file.write(b' ')
+        return self
+
 # .... DES - deserializer ...
 class DES():
     def __init__(self, fname, group):
@@ -56,3 +61,8 @@ class DES():
     def g_bytes(self):
         self.__i = self.__i + 1
         return self.__d[self.__i - 1]
+
+    def g_size(self):
+        sz = int(self.__d[self.__i])
+        self.__i = self.__i + 1
+        return sz

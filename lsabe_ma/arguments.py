@@ -16,7 +16,7 @@ def arguments_setup(max_kwd):
         '''Suggested initial test call sequence:
            python -m lsabe_ma --global-setup
            python -m lsabe_ma --authority-setup --authority-id 1 --sec-attr "attribute-1" "attribute-2"
-           python -m lsabe --keygen
+           python -m lsabe --keygen --authority-id 1 --sec-attr "attribute-1"  --GID "user-1" 
            python -m lsabe --encrypt --msg "Searchable encryption is good" --kwd Searchable encryption 
            python -m lsabe --encrypt --msg "This is unrelated message" --kwd unrelated message
            python -m lsabe --search --kwd Searchable
@@ -37,29 +37,6 @@ def arguments_setup(max_kwd):
                         help        =   'Generates attributes\' SK and PK files for the attributes managed by authority (CAUTION! NO CHECKS BEFORE OVERWRITE!)'
     )
 
-    parser.add_argument('--authority-id', 
-                        dest        =   'authority_id', 
-                        type        =   int,
-                        help        =   'Authority identifier (integer)'
-    )
-
-    parser.add_argument('--sec-attr', 
-                        nargs       =   '+',     
-                        dest        =   'attributes',
-                        metavar     =   '<security attributes>',
-                        default     =   [],
-                        help        =   'Security attributes. Multiply attributes are supported, e.g.: --kwd attribute1 attribute2'
-    )
-
-    parser.add_argument('--key-path',  
-                        type        =   pathlib.Path, 
-                        dest        =   'key_path',
-                        metavar     =   '<path>',
-                        default     =   default_key_path,
-                        help        =   'Directory to load or store MSK (lsabe.msk), PP (lsabe.pp) and SK (lsabe.sk). ' + 
-                                        'At this sytem it will default to ' + str(default_key_path)
-    )
-
     parser.add_argument('--keygen', 
                         dest        =   'keygen_flag', 
                         action      =   'store_true',
@@ -78,6 +55,15 @@ def arguments_setup(max_kwd):
                         help        =   'Generate  trapdoor, search matching messages, generate transformation key, tranform and decrypt'
     )
 
+    parser.add_argument('--key-path',  
+                        type        =   pathlib.Path, 
+                        dest        =   'key_path',
+                        metavar     =   '<path>',
+                        default     =   default_key_path,
+                        help        =   'Directory to load or store MSK (lsabe.msk), PP (lsabe.pp) and SK (lsabe.sk). ' + 
+                                        'At this sytem it will default to ' + str(default_key_path)
+    )
+
     parser.add_argument('--data-path',  
                         type        =   pathlib.Path, 
                         dest        =   'data_path',
@@ -85,6 +71,27 @@ def arguments_setup(max_kwd):
                         default     =   default_data_path,
                         help        =   'Directory to store encrypted messages (*.ciphertext). ' + 
                                         'At this sytem it will default to ' + str(default_data_path)
+    )
+
+    parser.add_argument('--authority-id', 
+                        dest        =   'authority_id', 
+                        type        =   int,
+                        help        =   'Authority identifier (integer)',
+                        metavar     =   '<authority identifier>'
+    )
+
+    parser.add_argument('--sec-attr', 
+                        nargs       =   '+',     
+                        dest        =   'attributes',
+                        metavar     =   '<security attributes>',
+                        default     =   [],
+                        help        =   'Security attributes. Multiply attributes are supported, e.g.: --kwd attribute1 attribute2'
+    )
+
+    parser.add_argument('--GID', 
+                        dest        =   'GID', 
+                        metavar     =   '<user identity>',
+                        help        =   'Global user identity'
     )
 
     parser.add_argument('--kwd',  

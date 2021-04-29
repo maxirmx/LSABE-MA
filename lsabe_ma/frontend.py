@@ -7,11 +7,24 @@ import functools
 import random
 import string
 from .arguments import arguments_setup, dir_create
-from .lsabe_ma import LSABE_MA, LSABE_AUTH
+from .lsabe_ma import LSABE_MA
+from .lsabe_authority import LSABE_AUTH
 
 def farewell():
         print('Exiting ... To get help please run python -m lsabe-ma --help.')
         exit(-1)
+
+def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
+    print('Loading authority-' + str(authority_id) +' attributes and keys from ' + str(key_path))
+    lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, authority_id)
+    try:
+        lsabe_auth.AuthorityLoad()
+    except:
+        print('Failed to load authority-' + str(authority_id) +' attributes and keys.')
+        farewell()
+    print('authority-' + str(authority_id) + ' attributes and keys successfully loaded.')
+    return lsabe_auth
+
 
 def startup():
 
@@ -56,30 +69,31 @@ def startup():
             lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
             lsabe_auth.AuthoritySetup(args.attributes)
         except:
-            print('Failed to store authority attributes and keys to ' + key_path)
+            print('Failed to store authority-' + str(args.authority_id) + ' attributes and keys to ' + key_path)
             farewell()
-        print('Authority attributes and keys saved to ' + str(key_path) + ' with prefix authority-' + str(args.authority_id))
-
-  
-    print('Loading authority attributes and keys from ' + str(key_path) + ' with prefix authority-' + str(args.authority_id))
-#    try:
-    lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
-    lsabe_auth.AuthorityLoad()
-#    except:
-#        print('Failed to load authority attributes and keys.')
-#        farewell()
-#    print('Authority attributes and keys successfully loaded.')
+        print('authority-' + str(args.authority_id) + ' attributes and keys saved to ' + str(key_path))
 
 # SK and TK generation
     if (args.keygen_flag):
-        print('Executing "SecretKeyGen(MSK,S,PP) → SK" ...')
-        sk_fname = key_path.joinpath('lsabe.sk')   
-#        SK = lsabe.SecretKeyGen()
+        lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
+
+        if len(args.attributes) == 0:
+            print('--keygen flag is set but no security attributes are provided. '
+                    'Security key generation requires at least one security attribute. --sec-attr "attribute-1" will be good enouph.')
+            farewell()
+        if args.GID is None or not args.GID:
+            print('--keygen flag is set but no user identifier is provided. '
+                    'Security key generation is executed against specific user. --GID "user-1" will be good enouph.')
+            farewell()
+
+        print('Executing "SecretKeyGen(MSK,i,PP,GID,ASK(i,j))→SK(i,GID)" ...')
+        SK = lsabe_auth.SecretKeyGen(args.GID, args.attributes)
 #        try:
-#            lsabe.serialize__SK(SK, sk_fname)
+        sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
+        lsabe_auth.serialize__SK(SK, sk_fname)
 #        except:
 #            print('Failed to store SK to ' + str(sk_fname))
-#            farewell()
+        farewell()
         print('SK saved to ' + str(sk_fname))
 
     if (args.encrypt_flag or args.search_flag) and len(args.keywords) > MAX_KEYWORDS:

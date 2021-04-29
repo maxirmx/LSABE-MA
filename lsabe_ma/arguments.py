@@ -17,7 +17,7 @@ def arguments_setup(max_kwd):
            python -m lsabe_ma --global-setup
            python -m lsabe_ma --authority-setup --authority-id 1 --sec-attr "attribute-1" "attribute-2"
            python -m lsabe --keygen --authority-id 1 --sec-attr "attribute-1"  --GID "user-1" 
-           python -m lsabe --encrypt --msg "Searchable encryption is good" --kwd Searchable encryption 
+           python -m lsabe --encrypt --authority-id 1 --msg "Searchable encryption is good" --kwd Searchable encryption 
            python -m lsabe --encrypt --msg "This is unrelated message" --kwd unrelated message
            python -m lsabe --search --kwd Searchable
            python -m lsabe --search --kwd ENCRYPTION''',

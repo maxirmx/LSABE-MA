@@ -96,3 +96,11 @@ class LSABE_MA():
         (self._PP['f'], self._PP['g'], self._PP['g^lambda'], ) = l.g_val(3)
 
 
+# ................................................................................
+# z
+# The data user chooses a random value z ∈ Zp
+# ................................................................................
+    def z(self):
+        z = self.group.random(ZR)
+        return z
+

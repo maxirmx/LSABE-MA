@@ -15,6 +15,10 @@ def farewell():
         exit(-1)
 
 def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
+    if authority_id is None:
+        print('Authority id is not specified. All LSABE-MA actions other then initialization are executed against specific aothority')
+        farewell()
+
     print('Loading authority-' + str(authority_id) +' attributes and keys from ' + str(key_path))
     lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, authority_id)
     try:
@@ -25,6 +29,11 @@ def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
     print('authority-' + str(authority_id) + ' attributes and keys successfully loaded.')
     return lsabe_auth
 
+def chekGIDorExit(GID)
+    if GID is None or not GID:
+        print('No user identifier is provided. All LSABE-MA actions other then initialization are executed against specific user'
+              '--GID "user-1" will be good enouph.')
+        farewell()
 
 def startup():
 
@@ -56,7 +65,7 @@ def startup():
         print('Executing AuthoritySetup (PP)→(APK(i,j),ASK(i,j)) ...')
 
         if args.authority_id is None:
-            print('--authority-setup flag is set but authority id was specified.')
+            print('--authority-setup flag is set but authority id is not specified.')
             farewell()        
         if len(args.attributes) == 0:
             print('--authority-setup flag is set but no security attributes are provided. '
@@ -76,14 +85,11 @@ def startup():
 # SK generation
     if (args.keygen_flag):
         lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
+        chekGIDorExit(args.GID)
 
         if len(args.attributes) == 0:
             print('--keygen flag is set but no security attributes are provided. '
                     'Security key generation requires at least one security attribute. --sec-attr "attribute-1" will be good enouph.')
-            farewell()
-        if args.GID is None or not args.GID:
-            print('--keygen flag is set but no user identifier is provided. '
-                    'Security key generation is executed against specific user. --GID "user-1" will be good enouph.')
             farewell()
 
         print('Executing "SecretKeyGen(MSK,i,PP,GID,ASK(i,j))→SK(i,GID)" ...')
@@ -107,7 +113,10 @@ def startup():
         data_path = args.data_path
         dir_create(data_path)
 
-        print('Executing "Encrypt(M,KW,(A,ρ),PP) → CT" ...')
+        print('Executing "Encrypt  (M,(A,ρ),KW,PP,{APK(i,j)})→CT." ...')
+
+        lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
+        chekGIDorExit(args.GID)
         
         if len(args.keywords) == 0:
             print('--encrypt flag is set but no keywords are supplied.\n'
@@ -115,20 +124,14 @@ def startup():
                     'Please provide at least one keyword. --kwd keyword will be good enouph')
             farewell()
 
-        if args.message is None or not args.message:
-            print('--encrypt flag is set but no message to encrypt is supplied.\n'
-                    'Encryption algorithm is defined as Encrypt(M,KW,(A,ρ),PP) → CT, where M is a message to encrypt.\n'
-                    'Please provide it, using quotes if there is more then one word. --msg "A message" will be good enouph')
-            farewell()
         try:
-            sk_fname = key_path.joinpath('lsabe.sk')   
- #           SK = lsabe.deserialize__SK(sk_fname)
+            sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
+            SK = lsabe_auth.deserialize__SK(sk_fname)
         except:
             print('Failed to load SK from ' + str(sk_fname))
             farewell()
         print('SK loaded from ' + str(sk_fname))
 
-#      (K1, K2, K3, K4, K5) = SK
 
         ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
         ct_fname = data_path.joinpath(ct_name + '.ciphertext')   

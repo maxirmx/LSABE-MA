@@ -142,8 +142,8 @@ class LSABE_AUTH(LSABE_MA):
                     K3 = hGID ** self._ASK[s]['y']
                     K4 = (self._PP['g'] ** self._ASK[s]['alfa']) * (hGID ** self._ASK[s]['beta'])
                     SKs = (K1, K3, K4)
-                    print("Secret key [" + a2 + "]:")
-                    print(K1, K3, K4)
+#                    print("Secret key [" + a2 + "]:")
+#                    print(K1, K3, K4)
                     SK = SK + (SKs, )
 
         return SK 
@@ -166,5 +166,69 @@ class LSABE_AUTH(LSABE_MA):
         for s in range(sz):
             SKs = l.g_val(3)
             SK = SK + (SKs, )
-            print(SKs)
+#            print(SKs)
         return SK 
+
+# ................................................................................
+# Encrypt  (M,(A,ρ),KW,PP,{APK(i,j)}) → CT.  
+# Given  file M, access policy(A,ρ), keyword set KW, PP and theset of attribute public 
+# keys APK(i,j) for  relevant  authorities, the Encrypt outputs  the  ciphertext CT,  
+# which  contains the encrypted secure index I and the encrypted file CM.
+# ................................................................................
+    def EncryptAndIndexGen(self, M, KW):
+
+        UpsilonWithHook = self.group.random(GT)
+        kse = extract_key(UpsilonWithHook)
+
+        a   = SymmetricCryptoAbstraction(kse)
+        CM = a.lsabe_encrypt(bytes(M, "utf-8"))
+
+        hkw = []
+        for kw in KW:
+            hkw.append(self.group.hash(kw, ZR))
+        
+        eta = formuleDeViete(hkw)
+
+# Formule de Viete assumes P(x)=0
+# We have P(x)=1, so eta[0] is adjusted
+        eta[0] = eta[0] + 1
+
+# .....
+# Check that polynomial coefficients are correct
+#        for hkwi in hkw:
+#            print ('P(' + str(hkwi) + ') = ' + str(polyVal(eta, hkwi)) + ' ~~~~ expected 1')
+
+        rho1, b = self.group.random(ZR), self.group.random(ZR)
+        
+        v = self._ap.randVector()
+        s = v[0]
+
+        I0 = self._PP['g'] ** b
+        I1 = self._PP['g'] ** (self._MSK['lambda']*b)
+        I2 = self._PP['g'] ** s
+        I4 = self._PP['g'] ** rho1
+
+        E1 = pair(self._PP['g'], self._PP['f']) ** rho1
+
+        I5 = ( )
+        for i in range(0, self._ap.l):  
+            I5 = I5 + ( (self._PP['g^beta'] ** self._ap.lmbda(i,v)) * (self.group.hash(self._ap.p(i), G1) ** rho1), )
+# ........................................................................ The article says:  ** -rho1          
+# ........................................................................ but it is definetely a mistake 
+
+
+
+
+        I = UpsilonWithHook * (pair(self._PP['g'], self._PP['g']) ** (self._MSK['alfa']*s))
+
+
+
+        I6 = ( )
+        for eta_j in eta:
+            I6 = I6 + ((rho1 ** (-1)) * eta_j,  )
+
+
+#       print("Ciphertext: ")
+#       print((I, I1, I2, I3, I4, I5, I6, E, CM))
+
+        return (I, I1, I2, I3, I4, I5, I6, E, CM)

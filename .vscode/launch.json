@@ -11,7 +11,7 @@
             "module": "lsabe_ma",
 //            "args": ["--global-setup"]
 //            "args": ["--authority-setup", "--authority-id", "1", "--sec-attr", "attribute1", "attribute2"]
-            "args": ["--keygen", "--authority-id", "1", "--sec-attr", "attribute1", "--GID", "user-1"]
+            "args": ["--keygen", "--authority-id", "1", "--sec-attr", "attribute1","--GID", "user-1"]
 }
     ]
 }

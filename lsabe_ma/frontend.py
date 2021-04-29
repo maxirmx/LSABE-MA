@@ -73,7 +73,7 @@ def startup():
             farewell()
         print('authority-' + str(args.authority_id) + ' attributes and keys saved to ' + str(key_path))
 
-# SK and TK generation
+# SK generation
     if (args.keygen_flag):
         lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
 
@@ -88,12 +88,13 @@ def startup():
 
         print('Executing "SecretKeyGen(MSK,i,PP,GID,ASK(i,j))→SK(i,GID)" ...')
         SK = lsabe_auth.SecretKeyGen(args.GID, args.attributes)
-#        try:
-        sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
-        lsabe_auth.serialize__SK(SK, sk_fname)
-#        except:
-#            print('Failed to store SK to ' + str(sk_fname))
-        farewell()
+        try:
+            sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
+            lsabe_auth.serialize__SK(SK, sk_fname)
+            lsabe_auth.deserialize__SK(sk_fname)
+        except:
+            print('Failed to store SK to ' + str(sk_fname))
+            farewell()
         print('SK saved to ' + str(sk_fname))
 
     if (args.encrypt_flag or args.search_flag) and len(args.keywords) > MAX_KEYWORDS:

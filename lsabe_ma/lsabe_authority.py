@@ -23,9 +23,9 @@ class LSABE_AUTH(LSABE_MA):
         LSABE_MA.__init__(self, msk_path, max_kw)
         LSABE_MA.GlobalLoad(self)
 
-        self._att_fname = msk_path.joinpath('authority-' + str(id) + '-lsabe-ma.att')   
-        self._ask_fname = msk_path.joinpath('authority-' + str(id) + '-lsabe-ma.ask')
-        self._apk_fname = msk_path.joinpath('authority-' + str(id) + '-lsabe-ma.apk')
+        self._att_fname = msk_path.joinpath('authority-' + str(id) + '.att')   
+        self._ask_fname = msk_path.joinpath('authority-' + str(id) + '.ask')
+        self._apk_fname = msk_path.joinpath('authority-' + str(id) + '.apk')
 
 # ................................................................................
 # AuthoritySetup (PP)→(APK(i,j),ASK(i,j)). Each authority A(j) conducts the authority
@@ -160,5 +160,11 @@ class LSABE_AUTH(LSABE_MA):
             l.p_val((K1,K3,K4))
 
     def deserialize__SK(self, sk_fname):
+        SK = ()
         l = DES(sk_fname, self.group)
-        return l.g_val(3) 
+        sz = l.g_size()
+        for s in range(sz):
+            SKs = l.g_val(3)
+            SK = SK + (SKs, )
+            print(SKs)
+        return SK 

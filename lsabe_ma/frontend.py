@@ -31,7 +31,7 @@ def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
 
 def chekGIDorExit(GID):
     if GID is None or not GID:
-        print('No user identifier is provided. All LSABE-MA actions other then initialization are executed against specific user'
+        print('No user identifier is provided. This action can be executed against specific user only'
               '--GID "user-1" will be good enouph.')
         farewell()
 
@@ -115,29 +115,32 @@ def startup():
         print('Executing "Encrypt  (M,(A,ρ),KW,PP,{APK(i,j)})→CT." ...')
 
         lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
-        chekGIDorExit(args.GID)
-        
+       
         if len(args.keywords) == 0:
             print('--encrypt flag is set but no keywords are supplied.\n'
                     'Encryption algorithm is defined as Encrypt(M,KW,(A,ρ),PP) → CT, where KW is a set of keywords.\n'
                     'Please provide at least one keyword. --kwd keyword will be good enouph')
             farewell()
 
-        ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
-        ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
-
         print('Message: \'' + str(args.message) + '\'' )    
         print('Keywords: ' + str(args.keywords))    
         CT = lsabe_auth.EncryptAndIndexGen( args.message, args.keywords)
-#        try:
-#           lsabe.serialize__CT(CT, ct_fname)
-#        except:
-#           print('Failed to store ciphertext to ' + str(ct_fname))
-#           farewell()
+        ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
+        ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
+        try:
+           lsabe_auth.serialize__CT(CT, ct_fname)
+           CT = lsabe_auth.deserialize__CT(ct_fname)
+        except:
+            print('Failed to store ciphertext to ' + str(ct_fname))
+            farewell()
         print('Сiphertext stored to ' + str(ct_fname))
 
 # Search (trapdoor generation, search, transformation, decription)
     if (args.search_flag):
+
+        lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
+        chekGIDorExit(args.GID)
+
         if len(args.keywords) == 0:
             print('--search flag is set but no keywords are supplied.\n'
                     'Please provide at least one keyword. --kwd keyword will be good enouph')
@@ -146,20 +149,20 @@ def startup():
         data_path = args.data_path
         dir_create(data_path)
 
-        print('Executing "Trapdoor(SK,KW′,PP) → TKW′" ...')
+        print('Executing Trapdoor({SKi,GID},KW′,PP) → TKW′." ...')
+        sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
         try:
-           sk_fname = key_path.joinpath('lsabe.sk')   
-#           SK = lsabe.deserialize__SK(sk_fname)
+           SK = lsabe_auth.deserialize__SK(sk_fname)
         except:
            print('Failed to load SK from ' + str(sk_fname))
            farewell()
         print('SK loaded from ' + str(sk_fname))
 
-#        TD = lsabe.TrapdoorGen(SK, args.keywords) 
+        TD = lsabe_auth.TrapdoorGen(SK, args.GID, args.keywords) 
 # The code to serialize trapdoor ... (no need to do it with this frontend)
-#        td_fname = out_path.joinpath('lsabe.trapdoor')   
+#        td_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.td')   
 #        try:
-#            lsabe.serialize__TD(TD, td_fname)
+#            lsabe_auth.serialize__TD(TD, td_fname)
 #        except:
 #            print('Failed to store trapdoor to ' + str(td_fname))
 #            farewell()
@@ -169,15 +172,15 @@ def startup():
         msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
         for msg_file in msg_files:
             ct_fname = data_path.joinpath(msg_file)   
-#            CT = lsabe.deserialize__CT(ct_fname)
+            CT = lsabe_auth.deserialize__CT(ct_fname)
             print('===== ' + msg_file + ' =====')
             print('Executing "Search(CT,TD) → True/False" ...')
     
-#            res = lsabe.Search(CT, TD)
+            res = lsabe_auth.Search(CT, TD)
             print('Search algoritm returned "' + str(res) + '"')
 
-            if res:
-                print('Executing "TransKeyGen(SK,z) → TK" ...')
+#            if res:
+#                print('Executing "TransKeyGen(SK,z) → TK" ...')
 #                z =  lsabe.z()
 #                TK = lsabe.TransKeyGen(SK, z)
 
@@ -191,10 +194,10 @@ def startup():
 #        print('TK saved to ' + str(tk_fname))
 
 
-                print('Executing "Transform (CT,TK) → CTout/⊥" ...')
+#                print('Executing "Transform (CT,TK) → CTout/⊥" ...')
 #                CTout = lsabe.Transform(CT, TK)
 
-                print('Executing "Decrypt(z,CTout) → M" ...')
+#                print('Executing "Decrypt(z,CTout) → M" ...')
 
 #                msg = lsabe.Decrypt(z, CTout)
 #                print('Message: \"' + msg + '\"' )

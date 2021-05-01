@@ -1,4 +1,4 @@
-__name__ = "lsabe-ma"
+__name__ = "lsabe_ma"
 __version__ = "0.0.1"
 __summary__ = "LSABE-MA algorithm"
 __uri__ = "https://github.com/maxirmx/LSABE-MA"

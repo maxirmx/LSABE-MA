@@ -231,8 +231,84 @@ class LSABE_AUTH(LSABE_MA):
         for eta_j in eta:
             I5 = I5 + ((rho1 ** (-1)) * eta_j,  )
 
-
-        print("Ciphertext: ")
-        print((I, I0, I1, I2, I3, I4, I5, E1, E2, CM))
+#        print("Ciphertext: ")
+#        print((I, I0, I1, I2, I3, I4, I5, E1, E2, CM))
 
         return (I, I0, I1, I2, I3, I4, I5, E1, E2, CM)
+
+# ................................................................................
+#  Ciphertext serializer and deserializer
+# ................................................................................
+    def serialize__CT(self, CT, ct_fname):
+        (I, I0, I1, I2, I3, I4, I5, E1, E2, CM) = CT
+        (ctCT, ctIV) = CM
+
+        l = SER(ct_fname, self.group)
+        l.p_tup(I).p_val((I0, I1, I2, I3)).p_tup(I4).p_tup(I5).p_val((E1,)).p_tup(E2).p_bytes(ctCT).p_bytes(ctIV)
+
+    def deserialize__CT(self, ct_fname):
+        l = DES(ct_fname, self.group)
+        return ((l.g_tup(), ) + l.g_val(4) + (l.g_tup(), ) + (l.g_tup(), ) + l.g_val(1) + (l.g_tup(), ) + ((l.g_bytes(), ) + (l.g_bytes(), ) ,) )
+
+# ................................................................................
+# Trapdoor ({SKi,GID},KW′,PP)→TKW′. 
+# Given the secret key set, query keyword set KW′ and PP, data users run Trapdoor, 
+# which outputs the keyword trapdoor TKW′.
+# ................................................................................
+
+    def TrapdoorGen(self, SK, GID, KW):
+        u, rho2 = self.group.random(ZR), self.group.random(ZR)
+
+        T1 = ()
+        for sk in SK:
+            (K1, K3, K4) = sk
+            T1sk = K1 ** u
+            T1 = T1 + (T1sk, )
+
+        T2 = self.group.hash(GID, G1)
+        lKW = self._1 * len(KW)                     # Make it ZR* value otherwise lkW**(-1) makes little sense 
+        T3 = (u * rho2) * (lKW**(-1))
+
+        T4 = ( )
+        for j in range(0, self._max_kw):
+            T4j = 0
+            for kw in KW:
+                T4j = T4j + self.group.hash(kw, ZR) ** j
+            T4 = T4 + ((rho2 ** (-1)) * T4j ,)
+
+        T5 = pair(self._PP['g'], self._PP['f']) ** u
+
+#        print ("Trapdoor:")
+#        print ((T1, T2, T3, T4, T5))
+
+        return (T1, T2, T3, T4, T5)
+
+# ................................................................................
+#  Trapdoor serializer and deserializer
+# ................................................................................
+    def serialize__TD(self, TD, td_fname):
+        (T1, T2, T3, T4, T5) = TD
+
+        l = SER(td_fname, self.group)
+        l.p_tup(T1).p_val((T2, T3)).p_tup(T4).p_val((T5,))
+
+    def deserialize__TD(self, td_fname):
+        l = DES(td_fname, self.group)
+        return ((l.g_tup(), ) + l.g_val(2) + (l.g_tup(), ) + l.g_val(1))
+
+# ................................................................................
+# Search(CT,TKW′) → 0/1.  
+# The cloud server takes the trap-door TKW′ and the ciphertext CT as input, 
+# and executes the search algorithm. If the output is “0”, the  query  fails.  
+# If theoutput is “1”, the query is successful and the cloud servers continue 
+# to run the transform algorithm.
+# ................................................................................
+    def Search(self, CT, TKW):
+        (I, I0, I1, I2, I3, I4, I5, E1, E2, CM) = CT
+        (T1, T2, T3, T4, T5) = TKW
+
+        T5j = I6[0]*T5[0]
+        for j in range(1, len(I6)):
+            T5j = T5j + I6[j]*T5[j]
+
+        return (T4 * pair(T1, (I1**T2) * I2) == E ** (T3 * T5j))

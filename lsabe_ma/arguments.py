@@ -16,11 +16,11 @@ def arguments_setup(max_kwd):
         '''Suggested initial test call sequence:
            python -m lsabe_ma --global-setup
            python -m lsabe_ma --authority-setup --authority-id 1 --sec-attr "attribute-1" "attribute-2"
-           python -m lsabe --keygen --authority-id 1 --sec-attr "attribute-1"  --GID "user-1" 
-           python -m lsabe --encrypt --authority-id 1 --msg "Searchable encryption is good" --kwd Searchable encryption 
-           python -m lsabe --encrypt --authority-id 1 --msg "This is unrelated message" --kwd unrelated message
-           python -m lsabe --search --kwd Searchable
-           python -m lsabe --search --kwd ENCRYPTION''',
+           python -m lsabe_ma --keygen --authority-id 1 --sec-attr "attribute-1"  --GID "user-1" 
+           python -m lsabe_ma --encrypt --authority-id 1 --msg "Searchable encryption is good" --kwd Searchable encryption 
+           python -m lsabe_ma --encrypt --authority-id 1 --msg "This is unrelated message" --kwd unrelated message
+           python -m lsabe_ma --search --authority-id 1 --GID user-1 --kwd Searchable
+           python -m lsabe_ma --search --authority-id 1 --GID user-1 --kwd ENCRYPTION''',
         formatter_class=argparse.RawDescriptionHelpFormatter   
     )
 

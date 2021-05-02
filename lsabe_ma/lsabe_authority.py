@@ -3,8 +3,6 @@ import sys
 import random
 from pathlib import Path
 
-from base64 import b64encode, b64decode
-
 # https://jhuisi.github.io/charm/cryptographers.html
 from charm.toolbox.pairinggroup import PairingGroup,ZR,G1,G2,GT,pair,extract_key
 
@@ -42,9 +40,7 @@ class LSABE_AUTH(LSABE_MA):
             ATTi = attr 
             alfa, y = random.randrange(sys.maxsize), random.randrange(sys.maxsize)
             beta = self.group.random(ZR)
-
             ASKi = {'alfa': alfa, 'y': y, 'beta': beta }
-
             APKi = { 'e(gg)^alfa' : pair(self._PP['g'], self._PP['g']) ** alfa, 'g**y': self._PP['g']**y, 'g**beta': self._PP['g']**beta }
 
             self._ATT = self._ATT + (ATTi, )
@@ -78,10 +74,10 @@ class LSABE_AUTH(LSABE_MA):
         apk_f.p_size(sz)
 
         for ATTi in self._ATT:
-            att_f.p_bytes(b64encode(bytes(ATTi, 'utf-8')).decode('utf-8'))
+            att_f.p_str(ATTi)
 
         for ASKi in self._ASK:
-            ask_f.p_bytes(b64encode(bytes(str(ASKi['alfa']), 'utf-8')).decode('utf-8')).p_bytes(b64encode(bytes(str(ASKi['y']), 'utf-8')).decode('utf-8')).p_val((ASKi['beta'], ))
+            ask_f.p_int(ASKi['alfa']).p_int(ASKi['y']).p_val((ASKi['beta'], ))
 
         for APKi in self._APK:
             apk_f.p_val(APKi.values())
@@ -100,14 +96,8 @@ class LSABE_AUTH(LSABE_MA):
         self._APK = ()
 
         for i in range(sz):
-            self._ATT = self._ATT + (b64decode(att_f.g_bytes()).decode('utf-8'), ) 
-
-            a = b64decode(ask_f.g_bytes()).decode('utf-8')
-            y = b64decode(ask_f.g_bytes()).decode('utf-8')
-
-            ASKi = {'alfa': int(a), 'y': int(y), 'beta': ask_f.g_val(1)[0]}
-            self._ASK = self._ASK + (ASKi, )
-            
+            self._ATT = self._ATT + (att_f.g_str(), ) 
+            self._ASK = self._ASK + ({'alfa': ask_f.g_int(), 'y': ask_f.g_int(), 'beta': ask_f.g_val(1)[0]}, )          
             APKi = {}
             APKi['e(gg)^alfa'], APKi['g**y'], APKi['g**beta'] = apk_f.g_val(3)  
             self._APK = self._APK + (APKi, )
@@ -129,18 +119,24 @@ class LSABE_AUTH(LSABE_MA):
 # ................................................................................
     def SecretKeyGen(self, GID, attrs):
 
-        delta = self.group.random(ZR)
-        hGID = self.group.hash(GID, G1)
+# The aricles says H: {0,1}* --> G, i.e.: hGID = self.group.hash(GID, G1)
+# However, it won't work since T4 = H(HID) and I0^T4 is used in Search operation
+# I believe that  power is not defined on GxG. 
+# Anyway H: {0,1}* --> ZR* does not make anythging worse
+        hGID = self.group.hash(GID, ZR)
+        HGID = self.group.hash(GID, G1)
 
         SK = ()
 
         for s in range(len(self._ATT)):
             for a2 in attrs:
                 if self._ATT[s]==a2:
-                    t = self.group.random(ZR)
-                    K1 = self._PP['g'] ** (self._ASK[s]['alfa']/(self._MSK['lambda'] + delta))
-                    K3 = hGID ** self._ASK[s]['y']
-                    K4 = (self._PP['g'] ** self._ASK[s]['alfa']) * (hGID ** self._ASK[s]['beta'])
+#   The article says K1 = g^(alfa/(lambda+delta)), but it makes no sense since delta is not defined
+#   It looks like copy-paste from LSABE 
+#   Algorith works if K1 = g^(alfa/(lambda + H(GID))) -- both if formula is checked and implemented in sw                 
+                    K1 = self._PP['g'] ** (self._ASK[s]['alfa']/(self._MSK['lambda'] + hGID))
+                    K3 = HGID ** self._ASK[s]['y']
+                    K4 = (self._PP['g'] ** self._ASK[s]['alfa']) * (HGID ** self._ASK[s]['beta'])
                     SKs = (K1, K3, K4)
 #                    print("Secret key [" + a2 + "]:")
 #                    print(K1, K3, K4)
@@ -168,6 +164,51 @@ class LSABE_AUTH(LSABE_MA):
             SK = SK + (SKs, )
 #            print(SKs)
         return SK 
+
+# ................................................................................
+# TransKeyGen({SKi,GID},z) → TKGID. 
+# Data user runs the TransKeyGen algorithm, which takes as input the secret keyset  
+# and  a  blind  valuez,  and  outputs  the  transformation  keyTKGID. 
+# ................................................................................
+    
+    def TransKeyGen(self, SK, z, GID):
+        TK2 = self.group.hash(GID, G1) ** z
+        TK3 = ()
+        TK4 = ()
+        for SKs in SK:
+            (K1, K3, K4) = SKs  
+            TK3 = TK3 + (K3 ** z, )
+            TK4 = TK4 + (K4 ** z, ) 
+
+#       print ("Transformation key:")
+#       print ((TK2, TK3, TK4))
+
+        return (TK2, TK3, TK4)
+
+# ................................................................................
+#  TK serializer and deserializer
+# ................................................................................
+    def serialize__TK(self, TK, tk_fname):
+        (TK2, TK3, TK4) = TK
+        l = SER(tk_fname, self.group)
+        l.p_val((TK2, ))
+        sz = len(TK3)
+        l.p_size(sz)
+        for i in range(sz):
+            l.p_val((TK3[i],TK4[i]))
+
+    def deserialize__TK(self, sk_fname):
+        l = DES(sk_fname, self.group)
+        TK2 = l.g_val(1)
+        TK3 = ()
+        TK4 = ()
+        sz = l.g_size()
+        for i in range(sz):
+            (TK3i, TK4i) = l.g_val(2)
+            TK3 = TK3 + (TK3i, )
+            TK4 = TK4 + (TK4i, )
+#       print((TK2, TK3, TK4))
+        return (TK2, TK3, TK4)
 
 # ................................................................................
 # Encrypt  (M,(A,ρ),KW,PP,{APK(i,j)}) → CT.  
@@ -202,7 +243,6 @@ class LSABE_AUTH(LSABE_MA):
         
         v = self._ap.randVector()
         s = v[0]
-
         g = self._PP['g']
 
         I0 = g ** b
@@ -217,8 +257,8 @@ class LSABE_AUTH(LSABE_MA):
             APKpi = self._APK[self._ap.p(i)]
             Ii = UpsilonWithHook * ( ( APKpi['e(gg)^alfa'] )**s ) 
             I4i = ( g **(ASKpi['beta'] * self._ap.lmbda(i,v)) ) * ( g ** (rho1 * ASKpi['y'])) 
-# ..................................................................The article says:  ** -rho1          
-# .................................................................. but it is definetely a mistake 
+# ...............................................................The article says:  ** -rho1          
+# ...............................................................but it is definetely a mistake 
             E2i = (APKpi['e(gg)^alfa'])**(b*rho1)
 
             I  = I  + (Ii, )
@@ -265,7 +305,7 @@ class LSABE_AUTH(LSABE_MA):
             T1sk = K1 ** u
             T1 = T1 + (T1sk, )
 
-        T2 = self.group.hash(GID, G1)
+        T2 = self.group.hash(GID, ZR)
         lKW = self._1 * len(KW)                     # Make it ZR* value otherwise lkW**(-1) makes little sense 
         T3 = (u * rho2) * (lKW**(-1))
 
@@ -307,8 +347,60 @@ class LSABE_AUTH(LSABE_MA):
         (I, I0, I1, I2, I3, I4, I5, E1, E2, CM) = CT
         (T1, T2, T3, T4, T5) = TKW
 
-        T5j = I6[0]*T5[0]
-        for j in range(1, len(I6)):
-            T5j = T5j + I6[j]*T5[j]
+        T1m = T1[self._ap.p(0)]
+        E2m = E2[0]
+        for i in range(1, len(T1)):
+            T1m = T1m * T1[self._ap.p(i)]
+            E2m = E2m * E2[i]
 
-        return (T4 * pair(T1, (I1**T2) * I2) == E ** (T3 * T5j))
+        T4m = I5[0]*T4[0]
+        for j in range(1, len(I5)):
+            T4m = T4m + I5[j]*T4[j]
+
+        return (T5 * pair(T1m, (I0 ** T2) * I1) == (E1 * E2m) ** (T3 * T4m))
+
+# ................................................................................
+# Transform (CT,TKGID) → CTout/⊥.  
+# Given the transformation key TKGID, the cloud server can transform the ciphertext  
+# into a transformed ciphertext and then returns the transformed ciphertext CTout 
+# to the user end. Otherwise, itoutputs ⊥.
+# ................................................................................
+    def Transform(self, CT, TK):
+        (I, I0, I1, I2, I3, I4, I5, E1, E2, CM)   = CT
+        (TK2, TK3, TK4) = TK
+
+        N = len(TK4)
+
+        TK3m  = self._1
+        TK4m  = self._1
+        I4m   = self._1
+        Im    = self._1
+
+        for i in range (N):
+            I4m  = I4m * (I4[i] ** self._ap.w(i))
+            TK3m = TK3m * (TK3[self._ap.p(i)] ** self._ap.w(i))
+            TK4m = TK4m * TK4[self._ap.p(i)]
+            Im   = Im * I[i]
+
+        TI = pair(TK4m, I2) / pair(I3, TK3m) * pair(I4m, TK2)
+        TTI = Im
+
+        return (CM,TI,TTI,N)    
+
+# ................................................................................
+#  Decrypt(z,CTout) → M.  
+#  The data user runs the Decrypt algorithm with its blind value z and the partially 
+#  decrypted ciphertext CT out as input, and then the user can recover the message 
+#  M with lightweight decryption
+# ................................................................................
+
+    def Decrypt(self, z, CTout):
+
+        (CM,TI,TTI,N) = CTout
+
+        UpsilonWithHook = (TTI/(TI**(self._1/z)))**(self._1/N)
+        kse = extract_key(UpsilonWithHook)
+        a   = SymmetricCryptoAbstraction(kse)
+        M   = a.lsabe_decrypt(CM)
+
+        return M

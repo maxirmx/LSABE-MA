@@ -2,7 +2,7 @@
 # SER - serializer  
 # DES - deserializer 
 
-
+from base64 import b64encode, b64decode
 import re
 
 # .... SER - serializer .... 
@@ -36,6 +36,14 @@ class SER():
         self.__file.write(b' ')
         return self
 
+    def p_int(self, val):
+        self.p_bytes(b64encode(bytes(str(val), 'utf-8')).decode('utf-8'))
+        return self
+
+    def p_str(self, s):
+        self.p_bytes(b64encode(bytes(s, 'utf-8')).decode('utf-8'))
+        return self
+
 # .... DES - deserializer ...
 class DES():
     def __init__(self, fname, group):
@@ -66,3 +74,13 @@ class DES():
         sz = int(self.__d[self.__i])
         self.__i = self.__i + 1
         return sz
+
+    def g_int(self):
+        val = int(b64decode(self.__d[self.__i]).decode('utf-8'))
+        self.__i = self.__i + 1
+        return val
+
+    def g_str(self):
+        s = b64decode(self.__d[self.__i]).decode('utf-8')
+        self.__i = self.__i + 1
+        return s

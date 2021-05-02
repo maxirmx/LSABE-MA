@@ -31,7 +31,7 @@ def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
 
 def chekGIDorExit(GID):
     if GID is None or not GID:
-        print('No user identifier is provided. This action can be executed against specific user only'
+        print('No user identifier is provided. This action can be executed against specific user only. '
               '--GID "user-1" will be good enouph.')
         farewell()
 
@@ -149,7 +149,6 @@ def startup():
         data_path = args.data_path
         dir_create(data_path)
 
-        print('Executing Trapdoor({SKi,GID},KW′,PP) → TKW′." ...')
         sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
         try:
            SK = lsabe_auth.deserialize__SK(sk_fname)
@@ -158,6 +157,7 @@ def startup():
            farewell()
         print('SK loaded from ' + str(sk_fname))
 
+        print('Executing "Trapdoor ({SKi,GID},KW′,PP) → TKW′" ...')
         TD = lsabe_auth.TrapdoorGen(SK, args.GID, args.keywords) 
 # The code to serialize trapdoor ... (no need to do it with this frontend)
 #        td_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.td')   
@@ -167,6 +167,18 @@ def startup():
 #            print('Failed to store trapdoor to ' + str(td_fname))
 #            farewell()
 
+        print('Executing "TransKeyGen({SKi,GID},z) → TKGID" ...')
+        z =  lsabe_ma.z()
+        TK = lsabe_auth.TransKeyGen(SK, z, args.GID)
+
+# The code to serialize transformation key ... (no need to do it with this frontend)
+#        tk_fname = out_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.tk')   
+#        try:
+#            lsabe_auth.serialize__TK(TK, tk_fname)
+#        except:
+#            print('Failed to store TK to ' + str(tk_fname))
+#            farewell()
+#        print('TK saved to ' + str(tk_fname))
 
         print('Scanning ' + str(data_path) + ' ...')
         msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
@@ -179,27 +191,12 @@ def startup():
             res = lsabe_auth.Search(CT, TD)
             print('Search algoritm returned "' + str(res) + '"')
 
-#            if res:
-#                print('Executing "TransKeyGen(SK,z) → TK" ...')
-#                z =  lsabe.z()
-#                TK = lsabe.TransKeyGen(SK, z)
+            if res:
+                print('Executing "Transform (CT,TKGID) → CTout/⊥" ...')
+                CTout = lsabe_auth.Transform(CT, TK)
 
-# The code to serialize transformation key ... (no need to do it with this frontend)
-#        tk_fname = out_path.joinpath('lsabe.tk')   
-#        try:
-#            lsabe.serialize__TK(TK, tk_fname)
-#        except:
-#            print('Failed to store TK to ' + str(tk_fname))
-#            farewell()
-#        print('TK saved to ' + str(tk_fname))
-
-
-#                print('Executing "Transform (CT,TK) → CTout/⊥" ...')
-#                CTout = lsabe.Transform(CT, TK)
-
-#                print('Executing "Decrypt(z,CTout) → M" ...')
-
-#                msg = lsabe.Decrypt(z, CTout)
-#                print('Message: \"' + msg + '\"' )
+                print('Executing "Decrypt(z,CTout) → M" ...')
+                msg = lsabe_auth.Decrypt(z, CTout)
+                print('Message: \"' + msg + '\"' )
 
 

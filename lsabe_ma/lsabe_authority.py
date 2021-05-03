@@ -127,7 +127,7 @@ class LSABE_AUTH(LSABE_MA):
         HGID = self.group.hash(GID, G1)
 
         SK = ()
-
+ 
         for s in range(len(self._ATT)):
             for a2 in attrs:
                 if self._ATT[s]==a2:
@@ -365,7 +365,7 @@ class LSABE_AUTH(LSABE_MA):
 # into a transformed ciphertext and then returns the transformed ciphertext CTout 
 # to the user end. Otherwise, itoutputs ⊥.
 # ................................................................................
-    def Transform(self, CT, TK):
+    def Transform(self, CT, TK, z):
         (I, I0, I1, I2, I3, I4, I5, E1, E2, CM)   = CT
         (TK2, TK3, TK4) = TK
 
@@ -382,7 +382,14 @@ class LSABE_AUTH(LSABE_MA):
             TK4m = TK4m * TK4[self._ap.p(i)]
             Im   = Im * I[i]
 
+        a = self._ASK[self._ap.p(0)]['alfa']
+        for i in range (1, N):
+            a = self._ASK[self._ap.p(i)]['alfa']
+
         TI = pair(TK4m, I2) / pair(I3, TK3m) * pair(I4m, TK2)
+
+      #  TI = pair(self._PP['g'], self._PP['g']) **(z * a)
+
         TTI = Im
 
         return (CM,TI,TTI,N)    

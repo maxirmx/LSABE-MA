@@ -128,8 +128,7 @@ def startup():
         ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
         ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
         try:
-           lsabe_auth.serialize__CT(CT, ct_fname)
-           CT = lsabe_auth.deserialize__CT(ct_fname)
+            lsabe_auth.serialize__CT(CT, ct_fname)
         except:
             print('Failed to store ciphertext to ' + str(ct_fname))
             farewell()
@@ -151,7 +150,7 @@ def startup():
 
         sk_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.sk')   
         try:
-           SK = lsabe_auth.deserialize__SK(sk_fname)
+            SK = lsabe_auth.deserialize__SK(sk_fname)
         except:
            print('Failed to load SK from ' + str(sk_fname))
            farewell()
@@ -193,7 +192,7 @@ def startup():
 
             if res:
                 print('Executing "Transform (CT,TKGID) → CTout/⊥" ...')
-                CTout = lsabe_auth.Transform(CT, TK)
+                CTout = lsabe_auth.Transform(CT, TK,z)
 
                 print('Executing "Decrypt(z,CTout) → M" ...')
                 msg = lsabe_auth.Decrypt(z, CTout)

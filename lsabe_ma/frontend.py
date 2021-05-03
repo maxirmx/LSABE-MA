@@ -20,7 +20,12 @@ def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
         farewell()
 
     print('Loading authority-' + str(authority_id) +' attributes and keys from ' + str(key_path))
-    lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, authority_id)
+    try:
+        lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, authority_id)
+    except:
+        print('Failed to initialize authority using master security key (MSK) and public properies (PP) at ' + str(key_path))
+        farewell()
+
     try:
         lsabe_auth.AuthorityLoad()
     except:
@@ -72,10 +77,14 @@ def startup():
                     'Each authority shall manage at least one security attribute. --sec-attr attribute will be good enouph.')
             farewell()
         
-        print('Using master security key (MSK) and public properies (PP) at ' + str(key_path))
-
         try:
             lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
+            print('Used master security key (MSK) and public properies (PP) at ' + str(key_path))
+        except:
+            print('Failed to initialize authority using master security key (MSK) and public properies (PP) at ' + str(key_path))
+            farewell()
+
+        try:
             lsabe_auth.AuthoritySetup(args.attributes)
         except:
             print('Failed to store authority-' + str(args.authority_id) + ' attributes and keys to ' + str(key_path))
@@ -192,7 +201,7 @@ def startup():
 
             if res:
                 print('Executing "Transform (CT,TKGID) → CTout/⊥" ...')
-                CTout = lsabe_auth.Transform(CT, TK,z)
+                CTout = lsabe_auth.Transform(CT, TK)   
 
                 print('Executing "Decrypt(z,CTout) → M" ...')
                 msg = lsabe_auth.Decrypt(z, CTout)

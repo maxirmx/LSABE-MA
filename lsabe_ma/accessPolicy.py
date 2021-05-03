@@ -38,8 +38,7 @@ class accessPolicy:
     def randVector(self):
         v=[]
         for i in range(self._n):
- #           v.append(random.randrange(sys.maxsize)) 
-            v.append(1)
+            v.append(random.randrange(sys.maxsize))  
         return v
 
 # A helper for lsabe.encrypt

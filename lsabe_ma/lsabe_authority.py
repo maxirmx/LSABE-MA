@@ -240,7 +240,7 @@ class LSABE_AUTH(LSABE_MA):
 #            print ('P(' + str(hkwi) + ') = ' + str(polyVal(eta, hkwi)) + ' ~~~~ expected 1')
 
         rho1, b = self.group.random(ZR), self.group.random(ZR)
-        
+
         v = self._ap.randVector()
         s = v[0]
         g = self._PP['g']
@@ -248,7 +248,7 @@ class LSABE_AUTH(LSABE_MA):
         I0 = g ** b
         I1 = g ** (self._MSK['lambda']*b)
         I2 = g ** s
-        I3 = g ** rho1
+        I3 = g ** rho1  
         I  = ()
         I4 = ()
         E2 = ()
@@ -257,8 +257,8 @@ class LSABE_AUTH(LSABE_MA):
             APKpi = self._APK[self._ap.p(i)]
             Ii = UpsilonWithHook * ( ( APKpi['e(gg)^alfa'] )**s ) 
             I4i = ( g **(ASKpi['beta'] * self._ap.lmbda(i,v)) ) * ( g ** (rho1 * ASKpi['y'])) 
-# ...............................................................The article says:  ** -rho1          
-# ...............................................................but it is definetely a mistake 
+#                                                                The article says:  ** -rho1          
+#                                                                but it is definetely a mistake 
             E2i = (APKpi['e(gg)^alfa'])**(b*rho1)
 
             I  = I  + (Ii, )
@@ -365,7 +365,7 @@ class LSABE_AUTH(LSABE_MA):
 # into a transformed ciphertext and then returns the transformed ciphertext CTout 
 # to the user end. Otherwise, itoutputs ⊥.
 # ................................................................................
-    def Transform(self, CT, TK, z):
+    def Transform(self, CT, TK):
         (I, I0, I1, I2, I3, I4, I5, E1, E2, CM)   = CT
         (TK2, TK3, TK4) = TK
 
@@ -382,14 +382,7 @@ class LSABE_AUTH(LSABE_MA):
             TK4m = TK4m * TK4[self._ap.p(i)]
             Im   = Im * I[i]
 
-        a = self._ASK[self._ap.p(0)]['alfa']
-        for i in range (1, N):
-            a = self._ASK[self._ap.p(i)]['alfa']
-
-        TI = pair(TK4m, I2) / pair(I3, TK3m) * pair(I4m, TK2)
-
-      #  TI = pair(self._PP['g'], self._PP['g']) **(z * a)
-
+        TI = pair(TK4m, I2) / pair(I4m, TK2) * pair(I3, TK3m)
         TTI = Im
 
         return (CM,TI,TTI,N)    

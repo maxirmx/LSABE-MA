@@ -192,26 +192,26 @@ class LSABE_AUTH(LSABE_MA):
             TK3 = TK3 + (K3 ** z, )
             TK4 = TK4 + (K4 ** z, ) 
 
-#       print ("Transformation key:")
-#       print ((TK2, TK3, TK4))
+#        print ("Transformation key:")
+#        print ((TK2, TK3, TK4))
 
         return (TK2, TK3, TK4)
 
 # ................................................................................
 #  TK serializer and deserializer
 # ................................................................................
-    def serialize__TK(self, TK, tk_fname):
+    def serialize__TK(self, TK, tk_fname, open = True):
         (TK2, TK3, TK4) = TK
-        l = SER(tk_fname, self.group)
+        l = SER(tk_fname, self.group, open)
         l.p_val((TK2, ))
         sz = len(TK3)
         l.p_size(sz)
         for i in range(sz):
             l.p_val((TK3[i],TK4[i]))
 
-    def deserialize__TK(self, sk_fname):
-        l = DES(sk_fname, self.group)
-        TK2 = l.g_val(1)
+    def deserialize__TK(self, sk_fname, open = True):
+        l = DES(sk_fname, self.group, open)
+        TK2 = l.g_val(1)[0]
         TK3 = ()
         TK4 = ()
         sz = l.g_size()
@@ -219,7 +219,7 @@ class LSABE_AUTH(LSABE_MA):
             (TK3i, TK4i) = l.g_val(2)
             TK3 = TK3 + (TK3i, )
             TK4 = TK4 + (TK4i, )
-#       print((TK2, TK3, TK4))
+#        print((TK2, TK3, TK4))
         return (TK2, TK3, TK4)
 
 # ................................................................................
@@ -291,14 +291,14 @@ class LSABE_AUTH(LSABE_MA):
 # ................................................................................
 #  Ciphertext serializer and deserializer
 # ................................................................................
-    def serialize__CT(self, CT, ct_fname, open = True):
+    def serialize__CT(self, CT, ct_fname, open=True):
         (I, I0, I1, I2, I3, I4, I5, E1, E2, CM) = CT
         (ctCT, ctIV) = CM
 
         l = SER(ct_fname, self.group, open)
         l.p_tup(I).p_val((I0, I1, I2, I3)).p_tup(I4).p_tup(I5).p_val((E1,)).p_tup(E2).p_bytes(ctCT).p_bytes(ctIV)
 
-    def deserialize__CT(self, ct_fname, open = True):
+    def deserialize__CT(self, ct_fname, open=True):
         l = DES(ct_fname, self.group, open)
         return ((l.g_tup(), ) + l.g_val(4) + (l.g_tup(), ) + (l.g_tup(), ) + l.g_val(1) + (l.g_tup(), ) + ((l.g_bytes(), ) + (l.g_bytes(), ) ,) )
 
@@ -338,14 +338,14 @@ class LSABE_AUTH(LSABE_MA):
 # ................................................................................
 #  Trapdoor serializer and deserializer
 # ................................................................................
-    def serialize__TD(self, TD, td_fname):
+    def serialize__TD(self, TD, td_fname, open = True):
         (T1, T2, T3, T4, T5) = TD
 
-        l = SER(td_fname, self.group)
+        l = SER(td_fname, self.group, open)
         l.p_tup(T1).p_val((T2, T3)).p_tup(T4).p_val((T5,))
 
-    def deserialize__TD(self, td_fname):
-        l = DES(td_fname, self.group)
+    def deserialize__TD(self, td_fname, open = True):
+        l = DES(td_fname, self.group, open)
         return ((l.g_tup(), ) + l.g_val(2) + (l.g_tup(), ) + l.g_val(1))
 
 # ................................................................................
@@ -398,6 +398,27 @@ class LSABE_AUTH(LSABE_MA):
         TTI = Im
 
         return (CM,TI,TTI,N)    
+
+
+# ................................................................................
+#  Partially decrypted ciphertext serializer and deserializer
+# ................................................................................
+    def serialize__CTout(self, CTout, ct_fname, open = True):
+        (CM, TI, TTI, N) = CTout
+        (ctCT, ctIV) = CM
+
+        l = SER(ct_fname, self.group, open)
+        l.p_val((TI, TTI)).p_bytes(ctCT).p_bytes(ctIV).p_int(N)
+
+    def deserialize__CTout(self, ct_fname, open = True):
+        l = DES(ct_fname, self.group, open)
+        (TI, TTI) = l.g_val(2)
+        ctCT = l.g_bytes()
+        ctIV = l.g_bytes()
+        N = l.g_int()
+        CM = (ctCT, ctIV)
+        return (CM, TI, TTI, N)
+
 
 # ................................................................................
 #  Decrypt(z,CTout) → M.  

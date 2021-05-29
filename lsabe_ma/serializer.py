@@ -55,17 +55,16 @@ class SER():
 
 # .... DES - deserializer ...
 class DES():
-    def __init__(self, fname, group, open = True):
+    def __init__(self, f, group, open = True):
         # f is either a file name (open = True) 
         #    or
-        # BytesIO object (open = False)
+        # Byte buffer (open = False)
         if open:
-            file =fname.open(mode='rb')
-        else:
-            file = fname
-        data = file.read().decode('utf-8')
-        if open:
+            file =f.open(mode='rb')
+            data = file.read().decode('utf-8')
             file.close
+        else:
+            data = f.decode('utf-8')
         self.__d = data.split()
         self.__i = 0
         self.__g = group

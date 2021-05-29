@@ -4,7 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-/*        {
+/*       {
             "name": "Python: Flask",
             "type": "python",
             "request": "launch",
@@ -28,8 +28,10 @@
             //            "args": ["--global-setup"]
             //           "args": ["--authority-setup", "--authority-id", "1", "--sec-attr", "attribute-1", "attribute-2"]
             //            "args": ["--keygen", "--authority-id", "1", "--sec-attr", "attribute-1","--GID", "user-1"]
-                        "args": ["--encrypt", "--authority-id", "1", "--kwd", "Searchable", "Encryption", "--msg", "Searchable encryption algorithm"]
-            //            "args": ["--search", "--authority-id", "1", "--kwd", "encryption", "--GID", "user-2"]
+            //            "args": ["--encrypt", "--authority-id", "1", "--kwd", "Searchable", "encryption", "--msg", "Searchable encryption algorithm", 
+            //                     "--url", "http://127.0.0.1:5000"]
+                        "args": ["--search", "--authority-id", "1", "--kwd", "encryption", "--GID", "user-1",
+                            "--url", "http://127.0.0.1:5000"]
 //            "args": [
 //                "--encrypt",
 //                "--search",

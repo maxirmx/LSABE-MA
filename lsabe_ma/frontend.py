@@ -6,7 +6,9 @@ import argparse
 import pathlib
 import random
 import string
+from typing import Text
 import requests
+from base64 import b64encode
 from .arguments import arguments_setup, dir_create
 from .lsabe_ma import LSABE_MA
 from .lsabe_authority import LSABE_AUTH
@@ -140,22 +142,36 @@ def startup():
         print('Message: \'' + str(args.message) + '\'' )    
         print('Keywords: ' + str(args.keywords))    
         CT = lsabe_auth.EncryptAndIndexGen( args.message, args.keywords)
-        ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
-        ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
-        try:
-            lsabe_auth.serialize__CT(CT, ct_fname)
-            print(CT)
-            x = io.BytesIO()
-            lsabe_auth.serialize__CT(CT, x, False)
-            response = requests.post(args.url + "/store", files={'CT': x.getvalue()})
-        except:
-            print('Failed to store ciphertext to ' + str(ct_fname))
-            farewell()
-        print('Сiphertext stored to ' + str(ct_fname))
+
+        if args.url is None:
+            print('No URL provided, storing cyphertext locally')    
+            ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
+            ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
+            try:
+                lsabe_auth.serialize__CT(CT, ct_fname)
+            except:
+                print('Failed to store ciphertext to ' + str(ct_fname))
+                farewell()
+            print('Сiphertext stored to ' + str(ct_fname))
+        else:
+            print('Sending cyphertext to: ' + str(args.url))
+            try:    
+                bbuf = io.BytesIO()
+                lsabe_auth.serialize__CT(CT, bbuf, False)
+                response = requests.post(args.url + "/store", files={'CT': bbuf.getvalue()})
+                bbuf.close()
+            except:
+                print('Failed to send ciphertext to ' + str(args.url) + ' Please ensure that the server is running.')
+                farewell()
+            print('Сiphertext sent to ' + str(args.url))
+            if response.text is not None:
+                t = response.text
+            else:
+                t = ""
+            print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
 
 # Search (trapdoor generation, search, transformation, decription)
     if (args.search_flag):
-
         lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
         chekGIDorExit(args.GID)
 
@@ -198,23 +214,66 @@ def startup():
 #            farewell()
 #        print('TK saved to ' + str(tk_fname))
 
-        print('Scanning ' + str(data_path) + ' ...')
-        msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
-        for msg_file in msg_files:
-            ct_fname = data_path.joinpath(msg_file)   
-            CT = lsabe_auth.deserialize__CT(ct_fname)
-            print('===== ' + msg_file + ' =====')
-            print('Executing "Search(CT,TD) → True/False" ...')
-    
-            res = lsabe_auth.Search(CT, TD)
-            print('Search algoritm returned "' + str(res) + '"')
+        if args.url is None:
+            print('No URL provided, scanning local files at  ' + str(data_path) + ' ...')
+            msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
+            for msg_file in msg_files:
+                ct_fname = data_path.joinpath(msg_file)   
+                CT = lsabe_auth.deserialize__CT(ct_fname)
+                print('===== ' + msg_file + ' =====')
+                print('Executing "Search(CT,TD) → True/False" ...')
 
-            if res:
-                print('Executing "Transform (CT,TKGID) → CTout/⊥" ...')
-                CTout = lsabe_auth.Transform(CT, TK)   
+                res = lsabe_auth.Search(CT, TD)
+                print('Search algoritm returned "' + str(res) + '"')
 
-                print('Executing "Decrypt(z,CTout) → M" ...')
-                msg = lsabe_auth.Decrypt(z, CTout)
-                print('Message: \"' + msg + '\"' )
+                if res:
+                    print('Executing "Transform (CT,TKGID) → CTout/⊥" ...')
+                    CTout = lsabe_auth.Transform(CT, TK)   
 
+                    print('Executing "Decrypt(z,CTout) → M" ...')
+                    msg = lsabe_auth.Decrypt(z, CTout)
+                    print('Message: \"' + msg + '\"' )
+
+        else:
+            print('Sending search request to: ' + str(args.url))
+            try:    
+                tds = io.BytesIO()
+                lsabe_auth.serialize__TD(TD, tds, False)
+
+                tks = io.BytesIO()
+                lsabe_auth.serialize__TK(TK, tks, False)
+                response = requests.get(args.url + "/search", 
+                            files={'TD': tds.getvalue(), 'TK': tks.getvalue()})
+
+                tds.close()
+                tks.close()
+            except:
+                print('Failed to send search request to ' + str(args.url) + ' Please ensure that the server is running.')
+                farewell()
+
+            nmsg = 0
+            if response.text is not None:
+                if (response.status_code==200):
+                    try:
+                        rsp = response.json();                    
+                        nmsg= len(rsp['CTout']);     
+                        t = str(nmsg) + ' partially decrypted messages received.'
+                    except:
+                        print('Failed to parse server response.')
+                        farewell()
+                else:    
+                    t = response.text
+            else:
+                t = ""
+
+            print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
+
+            print('Executing "Decrypt(z,CTout) → M" ...')
+            for CTout in rsp['CTout']:
+                try:
+                    CTout2 = lsabe_auth.deserialize__CTout(bytes(CTout, 'utf-8'), False)
+                    msg = lsabe_auth.Decrypt(z, CTout2)
+                    print('Message: \"' + msg + '\"' )
+                except:
+                    print('Failed to decrypt a message.')
 

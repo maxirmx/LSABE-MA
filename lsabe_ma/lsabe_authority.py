@@ -25,6 +25,18 @@ class LSABE_AUTH(LSABE_MA):
         self._ask_fname = msk_path.joinpath('authority-' + str(id) + '.ask')
         self._apk_fname = msk_path.joinpath('authority-' + str(id) + '.apk')
 
+    @property
+    def att_fname(self):
+        return str(self._att_fname)
+
+    @property
+    def ask_fname(self):
+        return str(self._ask_fname)
+
+    @property
+    def apk_fname(self):
+        return str(self._apk_fname)
+
 # ................................................................................
 # AuthoritySetup (PP)→(APK(i,j),ASK(i,j)). Each authority A(j) conducts the authority
 # setup algorithm, which inputs public parameter PP and generates an attribute public  
@@ -279,15 +291,15 @@ class LSABE_AUTH(LSABE_MA):
 # ................................................................................
 #  Ciphertext serializer and deserializer
 # ................................................................................
-    def serialize__CT(self, CT, ct_fname):
+    def serialize__CT(self, CT, ct_fname, open = True):
         (I, I0, I1, I2, I3, I4, I5, E1, E2, CM) = CT
         (ctCT, ctIV) = CM
 
-        l = SER(ct_fname, self.group)
+        l = SER(ct_fname, self.group, open)
         l.p_tup(I).p_val((I0, I1, I2, I3)).p_tup(I4).p_tup(I5).p_val((E1,)).p_tup(E2).p_bytes(ctCT).p_bytes(ctIV)
 
-    def deserialize__CT(self, ct_fname):
-        l = DES(ct_fname, self.group)
+    def deserialize__CT(self, ct_fname, open = True):
+        l = DES(ct_fname, self.group, open)
         return ((l.g_tup(), ) + l.g_val(4) + (l.g_tup(), ) + (l.g_tup(), ) + l.g_val(1) + (l.g_tup(), ) + ((l.g_bytes(), ) + (l.g_bytes(), ) ,) )
 
 # ................................................................................

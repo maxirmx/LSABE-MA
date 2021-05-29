@@ -1,6 +1,6 @@
 # LSABE special
 data/*
-keys/*
+keys/*.sk
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

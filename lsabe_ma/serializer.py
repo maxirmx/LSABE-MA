@@ -7,12 +7,21 @@ import re
 
 # .... SER - serializer .... 
 class SER():
-    def __init__(self, fname, group):
-        self.__file =fname.open(mode='wb')
+    def __init__(self, f, group, open = True):
+        # f is either a file name (open = True) 
+        #    or
+        # BytesIO object (open = False)
+        if open:
+            self.__file =f.open(mode='wb')
+            self.__c = True
+        else:
+            self.__file = f
+            self.__c = False
         self.__g = group
 
     def __del__(self):
-        self.__file.close()
+        if self.__c:
+            self.__file.close()
 
     def p_val(self, R):
         for v in R:
@@ -46,10 +55,17 @@ class SER():
 
 # .... DES - deserializer ...
 class DES():
-    def __init__(self, fname, group):
-        file =fname.open(mode='rb')
+    def __init__(self, fname, group, open = True):
+        # f is either a file name (open = True) 
+        #    or
+        # BytesIO object (open = False)
+        if open:
+            file =fname.open(mode='rb')
+        else:
+            file = fname
         data = file.read().decode('utf-8')
-        file.close
+        if open:
+            file.close
         self.__d = data.split()
         self.__i = 0
         self.__g = group

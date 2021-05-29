@@ -1,11 +1,12 @@
 # ..... LSABE module frontend (aka command line and arguments processing) ......
 
 import os
+import io
 import argparse
 import pathlib
-import functools
 import random
 import string
+import requests
 from .arguments import arguments_setup, dir_create
 from .lsabe_ma import LSABE_MA
 from .lsabe_authority import LSABE_AUTH
@@ -61,6 +62,7 @@ def startup():
         print('Executing GlobalSetup (κ)→(PP,MSK) ...')
         try:
             lsabe_ma.GlobalSetup()
+            response = requests.post(args.url + "/global-setup", files={'PP': lsabe_ma.pp_fname(), 'MSK': lsabe_ma.msk_fname()})
         except:
             print('Failed to store MSK and PP to ' + lsabe_ma.msk_fname +' and ' + lsabe_ma.pp_fname)
             farewell()
@@ -86,6 +88,10 @@ def startup():
 
         try:
             lsabe_auth.AuthoritySetup(args.attributes)
+            response = requests.post(args.url + "/authority-setup", 
+                            files={ 'ASK': lsabe_auth.ask_fname(), 
+                                    'ATT': lsabe_auth.att_fname(),  
+                                    'APK': lsabe_auth.apk_fname()  })
         except:
             print('Failed to store authority-' + str(args.authority_id) + ' attributes and keys to ' + str(key_path))
             farewell()
@@ -138,6 +144,10 @@ def startup():
         ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
         try:
             lsabe_auth.serialize__CT(CT, ct_fname)
+            print(CT)
+            x = io.BytesIO()
+            lsabe_auth.serialize__CT(CT, x, False)
+            response = requests.post(args.url + "/store", files={'CT': x.getvalue()})
         except:
             print('Failed to store ciphertext to ' + str(ct_fname))
             farewell()

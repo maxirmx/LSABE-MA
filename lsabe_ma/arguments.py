@@ -7,22 +7,33 @@ import pathlib
 def arguments_setup(max_kwd):
     default_key_path = pathlib.Path(__file__).parent.parent.joinpath('keys')
     default_data_path = pathlib.Path(__file__).parent.parent.joinpath('data')
-
+    
     parser = argparse.ArgumentParser(
         description             =   'LSABE-MA algorithm', 
         prog                    =   'lsabe_ma',
         fromfile_prefix_chars   =   '@',
         epilog                  =   
-        '''Suggested initial test call sequence:
-           python -m lsabe_ma --global-setup
-           python -m lsabe_ma --authority-setup --authority-id 1 --sec-attr "attribute-1" "attribute-2"
+        '''Suggested initial call sequence for client-server tests:
            python -m lsabe_ma --keygen --authority-id 1 --sec-attr "attribute-1"  --GID "user-1" 
-           python -m lsabe_ma --encrypt --authority-id 1 --msg "Searchable encryption is good" --kwd Searchable encryption 
-           python -m lsabe_ma --encrypt --authority-id 1 --msg "This is unrelated message" --kwd unrelated message
-           python -m lsabe_ma --search --authority-id 1 --GID "user-1" --kwd Searchable
-           python -m lsabe_ma --search --authority-id 1 --GID "user-1" --kwd ENCRYPTION''',
+           python -m lsabe_ma --encrypt --authority-id 1 --msg "Searchable encryption is good" --kwd Searchable encryption --url http://127.0.0.1:5000
+           python -m lsabe_ma --encrypt --authority-id 1 --msg "This is unrelated message" --kwd unrelated message --url http://127.0.0.1:5000
+           python -m lsabe_ma --search --authority-id 1 --GID "user-1" --kwd Searchable --url http://127.0.0.1:5000 
+           python -m lsabe_ma --search --authority-id 1 --GID "user-1" --kwd ENCRYPTION --url http://127.0.0.1:5000 ''' 
+
+#        '''Suggested initial call sequence for local (no server) tests:
+#           python -m lsabe_ma --global-setup
+#           python -m lsabe_ma --authority-setup --authority-id 1 --sec-attr "attribute-1" "attribute-2"
+#           python -m lsabe_ma --keygen --authority-id 1 --sec-attr "attribute-1"  --GID "user-1" 
+#           python -m lsabe_ma --encrypt --authority-id 1 --msg "Searchable encryption is good" --kwd Searchable encryption 
+#           python -m lsabe_ma --encrypt --authority-id 1 --msg "This is unrelated message" --kwd unrelated message
+#           python -m lsabe_ma --search --authority-id 1 --GID "user-1" --kwd Searchable
+#           python -m lsabe_ma --search --authority-id 1 --GID "user-1" --kwd ENCRYPTION'''
+           
+           ,
         formatter_class=argparse.RawDescriptionHelpFormatter   
     )
+
+    data_destination = parser.add_mutually_exclusive_group(required=False)
 
     parser.add_argument('--global-setup', 
                         dest        =   'global_setup_flag', 
@@ -64,13 +75,19 @@ def arguments_setup(max_kwd):
                                         'At this sytem it will default to ' + str(default_key_path)
     )
 
-    parser.add_argument('--data-path',  
+    data_destination.add_argument('--data-path',  
                         type        =   pathlib.Path, 
                         dest        =   'data_path',
                         metavar     =   '<path>',
                         default     =   default_data_path,
                         help        =   'Directory to store encrypted messages (*.ciphertext). ' + 
                                         'At this sytem it will default to ' + str(default_data_path)
+    )
+
+    data_destination.add_argument('--url',  
+                        dest        =   'url',
+                        metavar     =   '<url>',
+                        help        =   'LSABE-MA web server root'
     )
 
     parser.add_argument('--authority-id', 

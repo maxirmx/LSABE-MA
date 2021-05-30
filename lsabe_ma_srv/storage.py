@@ -163,7 +163,7 @@ def create_app():
 # Delete messages
     @app.route('/clear-messages', methods=['GET'])
     def clear_messages():
-        data = set()
+        data.clear()
         dir_create(data_path)
         msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
         nDel = 0
@@ -172,7 +172,6 @@ def create_app():
             try:
                 f = data_path.joinpath(msg_file)
                 os.remove(f)
-                print('.', end='')
                 nDel += 1
             except:
                 nErr += 1

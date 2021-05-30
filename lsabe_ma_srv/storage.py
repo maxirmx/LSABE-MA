@@ -75,7 +75,7 @@ def create_app():
         return 'Authority setup succesfully updated', 200
 
     # ------------------------------------------------
-    # Store cyfertext
+    # Store cyphertext
     @app.route('/store', methods=['POST'])
     def store():
         if 'CT' not in request.files:
@@ -86,7 +86,7 @@ def create_app():
         return 'Cyphertext stored', 200
 
     # ------------------------------------------------
-    # Search cyfertext (apply trapdoor, etc )
+    # Search cyphertext (apply trapdoor, etc )
     @app.route('/search', methods=['GET'])
     def search():
         res = False

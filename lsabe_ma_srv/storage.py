@@ -1,10 +1,13 @@
 import os
 import io
 import pathlib
+import random
+import string
 
 from flask import Flask, request, jsonify
 from lsabe_ma.lsabe_ma import LSABE_MA
 from lsabe_ma.lsabe_authority import LSABE_AUTH
+
 
 def create_app():
     # create and configure the app
@@ -13,12 +16,32 @@ def create_app():
     MAX_KEYWORDS = 10
     default_authority_id = 1
     key_path = pathlib.Path(__file__).parent.parent.joinpath('keys')
+    data_path = pathlib.Path(__file__).parent.parent.joinpath('storage')
 
 
-    app.KGC  =  LSABE_MA(key_path, MAX_KEYWORDS)
-    app.AUTH =  LSABE_AUTH(key_path, MAX_KEYWORDS, default_authority_id)
+    KGC  =  LSABE_MA(key_path, MAX_KEYWORDS)
+    AUTH =  LSABE_AUTH(key_path, MAX_KEYWORDS, default_authority_id)
 
+    dir_create(data_path)
     data = set()
+
+
+    try:
+        msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
+        numfiles = 0
+        for msg_file in msg_files:
+            ct_fname = data_path.joinpath(msg_file)
+            f = open(ct_fname, 'rb')
+            d = f.read()
+            data.add(d) 
+            f.close 
+            numfiles +=1 
+
+        print(str(numfiles) + ' encrypted messages loaded')
+    except:
+        print('Failed to load messages from file storage')
+        exit (-1)
+
 
 
     # ------------------------------------------------
@@ -42,8 +65,8 @@ def create_app():
             except:
                 return 'Failed to save MSK and PP',500
             try:    
-                app.KGC  =  LSABE_MA(key_path, MAX_KEYWORDS)
-                app.AUTH =  LSABE_AUTH(key_path, MAX_KEYWORDS, default_authority_id)
+                KGC  =  LSABE_MA(key_path, MAX_KEYWORDS)
+                AUTH =  LSABE_AUTH(key_path, MAX_KEYWORDS, default_authority_id)
             except:
                 return 'Failed to apply MSK and PP',500
         return 'Global setup succesfully updated', 200
@@ -69,7 +92,7 @@ def create_app():
             except:
                 return 'Failed to save ASK, APK and ATT',500
             try:    
-                app.AUTH =  LSABE_AUTH(key_path, MAX_KEYWORDS, default_authority_id)
+                AUTH =  LSABE_AUTH(key_path, MAX_KEYWORDS, default_authority_id)
             except:
                 return 'Failed to apply ASK, APK and ATT',500
         return 'Authority setup succesfully updated', 200
@@ -83,6 +106,12 @@ def create_app():
         else:
             CT = request.files['CT'].stream.read()
             data.add(CT)
+            ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
+            ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
+            f = open(ct_fname, 'wb')
+            f.write(CT)
+            f.close()
+
         return 'Cyphertext stored', 200
 
     # ------------------------------------------------
@@ -98,13 +127,13 @@ def create_app():
         td = request.files['TD'].stream.read()
         tk = request.files['TK'].stream.read()
         for ct in data:
-            ctds = app.AUTH.deserialize__CT(ct, False)
-            r = app.AUTH.Search(ctds, app.AUTH.deserialize__TD(td, False))
+            ctds = AUTH.deserialize__CT(ct, False)
+            r = AUTH.Search(ctds, AUTH.deserialize__TD(td, False))
             res = res or r
             if r:
-                CTout = app.AUTH.Transform(ctds, app.AUTH.deserialize__TK(tk, False))
+                CTout = AUTH.Transform(ctds, AUTH.deserialize__TK(tk, False))
                 cts = io.BytesIO()
-                app.AUTH.serialize__CTout(CTout, cts, False)
+                AUTH.serialize__CTout(CTout, cts, False)
                 rsp.append(cts.getvalue().decode('ascii'))
 
         if res:
@@ -113,3 +142,14 @@ def create_app():
         return 'Message was not found.', 404
 
     return app
+
+def dir_create(pth):
+    try:
+        pth.mkdir(mode=0o777, parents=True, exist_ok=True)
+    except:
+        if pth.Exists() and not pth.is_dir():
+            print(str(pth) + ' exists and is not a directory')
+        else:
+            print('Could not create ' + str(pth))
+        print('Exiting ...')
+        exit(-1)

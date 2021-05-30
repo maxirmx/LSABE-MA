@@ -1,5 +1,6 @@
 # LSABE special
 data/*
+storage/*
 keys/*.sk
 
 # Byte-compiled / optimized / DLL files

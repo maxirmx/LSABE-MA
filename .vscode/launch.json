@@ -28,10 +28,13 @@
             //            "args": ["--global-setup"]
             //           "args": ["--authority-setup", "--authority-id", "1", "--sec-attr", "attribute-1", "attribute-2"]
             //            "args": ["--keygen", "--authority-id", "1", "--sec-attr", "attribute-1","--GID", "user-1"]
-            //            "args": ["--encrypt", "--authority-id", "1", "--kwd", "Searchable", "encryption", "--msg", "Searchable encryption algorithm", 
-            //                     "--url", "http://127.0.0.1:5000"]
-                        "args": ["--search", "--authority-id", "1", "--kwd", "Encryption", "--GID", "user-1",
-                            "--url", "http://127.0.0.1:5000"]
+            //            "args": ["--encrypt", "--authority-id", "1", "--kwd", "Searchable", "encryption", "--msg", "Searchable encryption algorithm"]//, 
+//                                 "--url", "http://127.0.0.1:5000"]
+            //            "args": ["--search", "--authority-id", "1", "--kwd", "A", "--GID", "user-1",
+            //                "--url", "http://127.0.0.1:5000"]
+                                  "args": ["--bulk-encrypt", "bulk/100.txt", "--authority-id", "1", "--search", "--GID", "user-1", 
+                                           "--kwd", "D", "--url", "http://127.0.0.1:5000"]  
+            //                      "args": ["--clear-messages", "--url", "http://127.0.0.1:5000"]  
 //            "args": [
 //                "--encrypt",
 //                "--search",

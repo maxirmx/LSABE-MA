@@ -60,6 +60,19 @@ def arguments_setup(max_kwd):
                         help        =   'Encrypt message and generate keyword index'
     )
 
+    parser.add_argument('--bulk-encrypt',  
+                        type        =   pathlib.Path, 
+                        dest        =   'bulk_encrypt',
+                        metavar     =   '<file name>',
+                        help        =   'A text file with messages to be encrypted.'
+    )
+
+    parser.add_argument('--clear-messages',  
+                        dest        =   'clear_flag', 
+                        action      =   'store_true',
+                        help        =   'Delete all stored messages'
+    )
+
     parser.add_argument('--search', 
                         dest        =   'search_flag', 
                         action      =   'store_true',

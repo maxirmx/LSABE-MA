@@ -1,5 +1,6 @@
 import os
 import io
+import time
 import pathlib
 import random
 import string
@@ -75,7 +76,7 @@ def create_app():
     # Update authority setup parameters
     @app.route('/authority-setup', methods=['POST'])
     @app.route('/authority-setup/<authority_id>', methods=['POST'])
-    def authoritySetup(authority_id=None):
+    def authoritySetup(authority_id=1):
         if authority_id is None:
             authority_id = default_authority_id
 
@@ -120,6 +121,11 @@ def create_app():
     def search():
         res = False
         rsp = []
+        search_time = 0
+        transform_time = 0
+        total_time = time.time()
+        encrypted_size = 0
+        transformed_size = 0
         if 'TD' not in request.files:
             return "Trapdoor is required", 422
         if 'TK' not in request.files:
@@ -127,21 +133,53 @@ def create_app():
         td = request.files['TD'].stream.read()
         tk = request.files['TK'].stream.read()
         for ct in data:
+            encrypted_size += len(ct)
             ctds = AUTH.deserialize__CT(ct, False)
+            tms = time.time()
             r = AUTH.Search(ctds, AUTH.deserialize__TD(td, False))
+            search_time += (time.time() - tms)
             res = res or r
             if r:
+                tmt = time.time()
                 CTout = AUTH.Transform(ctds, AUTH.deserialize__TK(tk, False))
+                transform_time += (time.time() - tmt)
                 cts = io.BytesIO()
                 AUTH.serialize__CTout(CTout, cts, False)
-                rsp.append(cts.getvalue().decode('ascii'))
+                transformed_size += len(cts.getvalue())
+                rsp.append(cts.getvalue().decode('ascii'))      
 
+        total_time = time.time()-total_time
         if res:
-            return jsonify({'CTout': rsp}), 200
+            return jsonify({'CTout': rsp,
+                            'total_time': total_time*1000,
+                            'search_time': search_time*1000,
+                            'transform_time': transform_time*1000,
+                            'encrypted_size': encrypted_size,
+                            'transformed_size': transformed_size}), 200
             
         return 'Message was not found.', 404
 
+# ------------------------------------------------
+# Delete messages
+    @app.route('/clear-messages', methods=['GET'])
+    def clear_messages():
+        data = set()
+        dir_create(data_path)
+        msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
+        nDel = 0
+        nErr = 0
+        for msg_file in msg_files:
+            try:
+                f = data_path.joinpath(msg_file)
+                os.remove(f)
+                print('.', end='')
+                nDel += 1
+            except:
+                nErr += 1
+        return jsonify({'nDel': nDel, 'nErr': nErr}), 200
+
     return app
+
 
 def dir_create(pth):
     try:

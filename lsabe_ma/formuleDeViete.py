@@ -12,7 +12,7 @@ def formuleDeViete(roots):
     for i in range(1, n + 1):
         for j in range(n - i - 1, n):
             coeff[j] -= roots[i - 1] * coeff[j + 1]  
-#  Note.  Charmcryptor ZR values do not really support negations but do support substractions.   
+#  Note.  Charmcrypto ZR values do not really support negations but do support substractions.   
 #         Canonical (-1) * (roots[i - 1] * coeff[j + 1]) breaks the calculation bitterly    
     
 #   print("Polynomial Coefficients : ", end = "")

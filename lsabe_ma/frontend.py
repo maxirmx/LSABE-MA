@@ -2,6 +2,7 @@
 
 import os
 import io
+import time
 import argparse
 import pathlib
 import random
@@ -12,36 +13,7 @@ from base64 import b64encode
 from .arguments import arguments_setup, dir_create
 from .lsabe_ma import LSABE_MA
 from .lsabe_authority import LSABE_AUTH
-
-def farewell():
-        print('Exiting ... To get help please run python -m lsabe-ma --help.')
-        exit(-1)
-
-def tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, authority_id):
-    if authority_id is None:
-        print('Authority id is not specified. All LSABE-MA actions other then initialization are executed against specific aothority')
-        farewell()
-
-    print('Loading authority-' + str(authority_id) +' attributes and keys from ' + str(key_path))
-    try:
-        lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, authority_id)
-    except:
-        print('Failed to initialize authority using master security key (MSK) and public properies (PP) at ' + str(key_path))
-        farewell()
-
-    try:
-        lsabe_auth.AuthorityLoad()
-    except:
-        print('Failed to load authority-' + str(authority_id) +' attributes and keys.')
-        farewell()
-    print('authority-' + str(authority_id) + ' attributes and keys successfully loaded.')
-    return lsabe_auth
-
-def chekGIDorExit(GID):
-    if GID is None or not GID:
-        print('No user identifier is provided. This action can be executed against specific user only. '
-              '--GID "user-1" will be good enouph.')
-        farewell()
+from .feRoutines import *
 
 def startup():
 
@@ -49,8 +21,14 @@ def startup():
     parser = arguments_setup(MAX_KEYWORDS)
     args = parser.parse_args()
 
-    if (not args.global_setup_flag and not args.authority_setup_flag and not args.keygen_flag and not args.encrypt_flag and not args.search_flag):
-        print('Nothing to do. Specify either --global-setup or --authority-setup or --keygen or --encrypt or --search.')
+    if (not args.global_setup_flag and 
+        not args.authority_setup_flag and 
+        not args.keygen_flag and 
+        not args.encrypt_flag and 
+        not args.search_flag and 
+        not args.clear_flag and
+        args.bulk_encrypt is None):
+        print('Nothing to do. Specify either --global-setup or --authority-setup or --keygen or --encrypt or --search or --bulk-encrypt.')
         farewell()
 
     key_path = args.key_path
@@ -58,46 +36,10 @@ def startup():
 
     lsabe_ma = LSABE_MA(key_path, MAX_KEYWORDS)
 
-# MSK and PP are requied always
-# So we either generate them (SystemInit) or load from files (SystemLoad)
     if args.global_setup_flag:
-        print('Executing GlobalSetup (κ)→(PP,MSK) ...')
-        try:
-            lsabe_ma.GlobalSetup()
-            response = requests.post(args.url + "/global-setup", files={'PP': lsabe_ma.pp_fname(), 'MSK': lsabe_ma.msk_fname()})
-        except:
-            print('Failed to store MSK and PP to ' + lsabe_ma.msk_fname +' and ' + lsabe_ma.pp_fname)
-            farewell()
-        print('MSK and PP saved to ' + lsabe_ma.msk_fname +' and ' + lsabe_ma.pp_fname)
-
+        globalSetup(lsabe_ma, args.url)
     if args.authority_setup_flag:
-        print('Executing AuthoritySetup (PP)→(APK(i,j),ASK(i,j)) ...')
-
-        if args.authority_id is None:
-            print('--authority-setup flag is set but authority id is not specified.')
-            farewell()        
-        if len(args.attributes) == 0:
-            print('--authority-setup flag is set but no security attributes are provided. '
-                    'Each authority shall manage at least one security attribute. --sec-attr attribute will be good enouph.')
-            farewell()
-        
-        try:
-            lsabe_auth = LSABE_AUTH(key_path, MAX_KEYWORDS, args.authority_id)
-            print('Used master security key (MSK) and public properies (PP) at ' + str(key_path))
-        except:
-            print('Failed to initialize authority using master security key (MSK) and public properies (PP) at ' + str(key_path))
-            farewell()
-
-        try:
-            lsabe_auth.AuthoritySetup(args.attributes)
-            response = requests.post(args.url + "/authority-setup", 
-                            files={ 'ASK': lsabe_auth.ask_fname(), 
-                                    'ATT': lsabe_auth.att_fname(),  
-                                    'APK': lsabe_auth.apk_fname()  })
-        except:
-            print('Failed to store authority-' + str(args.authority_id) + ' attributes and keys to ' + str(key_path))
-            farewell()
-        print('authority-' + str(args.authority_id) + ' attributes and keys saved to ' + str(key_path))
+        lsabe_auth = authoritySetup(args.url, MAX_KEYWORDS)
 
 # SK generation
     if (args.keygen_flag):
@@ -141,34 +83,35 @@ def startup():
 
         print('Message: \'' + str(args.message) + '\'' )    
         print('Keywords: ' + str(args.keywords))    
-        CT = lsabe_auth.EncryptAndIndexGen( args.message, args.keywords)
+        Encrypt(lsabe_auth, args.message, args.keywords, args.url, data_path, False, 0)
 
-        if args.url is None:
-            print('No URL provided, storing cyphertext locally')    
-            ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
-            ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
-            try:
-                lsabe_auth.serialize__CT(CT, ct_fname)
-            except:
-                print('Failed to store ciphertext to ' + str(ct_fname))
-                farewell()
-            print('Сiphertext stored to ' + str(ct_fname))
-        else:
-            print('Sending cyphertext to: ' + str(args.url))
-            try:    
-                bbuf = io.BytesIO()
-                lsabe_auth.serialize__CT(CT, bbuf, False)
-                response = requests.post(args.url + "/store", files={'CT': bbuf.getvalue()})
-                bbuf.close()
-            except:
-                print('Failed to send ciphertext to ' + str(args.url) + ' Please ensure that the server is running.')
-                farewell()
-            print('Сiphertext sent to ' + str(args.url))
-            if response.text is not None:
-                t = response.text
-            else:
-                t = ""
-            print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
+# Bulk encrypt messages    
+    if args.bulk_encrypt is not None:
+        data_path = args.data_path
+        dir_create(data_path)
+
+        lsabe_auth = tryAuthorityLoadOrExit(key_path, MAX_KEYWORDS, args.authority_id)
+        print('Executing bulk encrypt from file ' + str(args.bulk_encrypt))
+        try:
+            file = open(args.bulk_encrypt, 'r')
+            Lines = file.readlines()
+        except:           
+            print('Failed to read file ' + str(args.bulk_encrypt))
+            farewell()
+
+        nLine = 0
+        nOk   = 0
+        for line in Lines:
+            nLine +=1
+            data = line.strip().split(',')
+            kwd = data[1:]
+            if len(kwd) ==0:
+                print('\nLine ' + str(nLine) +' -- no keywords, skipping.')
+            else:    
+                if Encrypt(lsabe_auth, data[0], data[1:], args.url, data_path, True, nLine):
+                    nOk += 1
+        
+        print('\n' + str(nLine) + ' lines processed. ' + str(nOk) + ' messages loaded.')
 
 # Search (trapdoor generation, search, transformation, decription)
     if (args.search_flag):
@@ -192,27 +135,14 @@ def startup():
         print('SK loaded from ' + str(sk_fname))
 
         print('Executing "Trapdoor ({SKi,GID},KW′,PP) → TKW′" ...')
+        start = time.time()
         TD = lsabe_auth.TrapdoorGen(SK, args.GID, args.keywords) 
-# The code to serialize trapdoor ... (no need to do it with this frontend)
-#        td_fname = key_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.td')   
-#        try:
-#            lsabe_auth.serialize__TD(TD, td_fname)
-#        except:
-#            print('Failed to store trapdoor to ' + str(td_fname))
-#            farewell()
-
+        trapdoor_gen_time = (time.time() - start) * 1000
         print('Executing "TransKeyGen({SKi,GID},z) → TKGID" ...')
+        start = time.time()
         z =  lsabe_ma.z()
         TK = lsabe_auth.TransKeyGen(SK, z, args.GID)
-
-# The code to serialize transformation key ... (no need to do it with this frontend)
-#        tk_fname = out_path.joinpath(args.GID + '-authority-' + str(args.authority_id) + '.tk')   
-#        try:
-#            lsabe_auth.serialize__TK(TK, tk_fname)
-#        except:
-#            print('Failed to store TK to ' + str(tk_fname))
-#            farewell()
-#        print('TK saved to ' + str(tk_fname))
+        transkey_gen_time = (time.time() - start) * 1000
 
         if args.url is None:
             print('No URL provided, scanning local files at  ' + str(data_path) + ' ...')
@@ -253,10 +183,10 @@ def startup():
 
             nmsg = 0
             if response.text is not None:
-                if (response.status_code==200):
+                if response.status_code==200:
                     try:
-                        rsp = response.json();                    
-                        nmsg= len(rsp['CTout']);     
+                        rsp = response.json()                    
+                        nmsg= len(rsp['CTout'])     
                         t = str(nmsg) + ' partially decrypted messages received.'
                     except:
                         print('Failed to parse server response.')
@@ -268,13 +198,134 @@ def startup():
 
             print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
 
+            decryption_time = 0
             if nmsg>0:
                 print('Executing "Decrypt(z,CTout) → M" ...')
                 for CTout in rsp['CTout']:
                     try:
                         CTout2 = lsabe_auth.deserialize__CTout(bytes(CTout, 'utf-8'), False)
+                        tm = time.time()
                         msg = lsabe_auth.Decrypt(z, CTout2)
+                        decryption_time += (time.time() - tm)
                         print('Message: \"' + msg + '\"' )
                     except:
                         print('Failed to decrypt a message.')
+                decryption_time *= 1000
+            if nmsg>0:
+                print_evaluation_results(rsp, nmsg, trapdoor_gen_time, transkey_gen_time, decryption_time)
+
+# Delete all message files
+    if (args.clear_flag):
+        if args.url is None:
+            print('No url provided, clearing local message store')
+            data_path = args.data_path
+            dir_create(data_path)
+
+            msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
+            print('Deleting ' + str(len(msg_files)) + ' message files')
+            nDel = 0
+            for msg_file in msg_files:
+                try:
+                    f = data_path.joinpath(msg_file)
+                    os.remove(f)
+                    print('.', end='')
+                    nDel += 1
+                except:
+                    print('\nFailed to delete ' + str(f))
+            print('\n' + str(nDel) + ' files deleted.')
+        else:
+            print('Sending clear-messages request to the server')
+            try:
+                response = requests.get(args.url + "/clear-messages")
+            except:
+                print('Failed to send clear-messages request to ' + str(args.url) + ' Please ensure that the server is running.')
+                farewell()
+            if response.text is not None:
+                if (response.status_code==200):
+                    try:
+                        rsp = response.json()                    
+                        nDel= str(rsp['nDel'])     
+                        nErr= str(rsp['nErr'])      
+                        t = 'Successfully deleted ' + nDel + ' messages'
+                        if int(nErr)>0:
+                            t = t + ', failed to delete ' + nErr + ' messages' 
+                        else: 
+                            t = t + '.'    
+                    except:
+                        print('Failed to parse server response.')
+                        farewell()
+                else:    
+                    t = response.text
+            else:
+                t = ""
+            print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
+
+
+# Encrypt routine. used both at bulk and single - message operations 
+def Encrypt(auth, msg, kwd, url, data_path, bulk, nLine):
+    bOk = True
+    CT = auth.EncryptAndIndexGen( msg, kwd)
+    if bulk:
+        m = 'Line ' + str(nLine) + ':'
+    else:
+        m = ''
+    if url is None:
+        if not bulk:
+            print('No URL provided, storing cyphertext locally')    
+        ct_name = ''.join(random.choice(string.ascii_letters) for _ in range(8))
+        ct_fname = data_path.joinpath(ct_name + '.ciphertext')   
+        try:
+            auth.serialize__CT(CT, ct_fname)
+        except:
+            print(m + 'Failed to store ciphertext to ' + str(ct_fname))
+            bOk = False
+        if not bulk:
+            print('Сiphertext stored to ' + str(ct_fname))
+    else:
+        if not bulk:
+            print('Sending cyphertext to: ' + str(url))
+        try:    
+            bbuf = io.BytesIO()
+            auth.serialize__CT(CT, bbuf, False)
+            response = requests.post(url + "/store", files={'CT': bbuf.getvalue()})
+            bbuf.close()
+        except:
+            print(m + 'Failed to send ciphertext to ' + str(url) + ' Please ensure that the server is running.')
+            bOk = False
+        if not bulk:
+            print('Сiphertext sent to ' + str(url))
+        if response.text is not None:
+            t = response.text
+        else:
+            t = ""
+        if not bulk or response.status_code != 200:
+            print(m + 'Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
+        if response.status_code != 200:
+            bOk = False
+    if bulk:
+        print('.', end='')
+    return bOk
+
+def print_evaluation_results(res, nmsg, trapdoor_gen_time, transkey_gen_time, decryption_time):
+    print()
+    print("Number of results: ", nmsg)
+    print()
+    print("Server - Overall searching time (ms): ", "{:,.2f}".format(res["total_time"]))
+    print("Server - Searching time only (ms): ", "{:,.2f}".format(res["search_time"]))
+    print("Server - Transform time only (ms): ", "{:,.2f}".format(res["transform_time"]))
+    print("Server - Overhead time (ms): ", "{:,.2f}".format(res["total_time"]-res["search_time"]-res["transform_time"]))
+    print()
+    print("Server - Encrypted data sizes (before transformation):")
+    print("Server - Results size (bytes)", "{:,.2f}".format(res["encrypted_size"]))
+    print("Server - Results size (KB)", "{:,.2f}".format(res["encrypted_size"]/1024))
+    print("Server - Results size (MB)", "{:,.2f}".format(res["encrypted_size"]/1024/1024))
+    print()
+    print("Server - Transformed data sizes:")
+    print("Server - Transformed size (bytes)", "{:,.2f}".format(res["transformed_size"]))
+    print("Server - Transformed size (KB)", "{:,.2f}".format(res["transformed_size"]/1024))
+    print("Server - Transformed size (MB)", "{:,.2f}".format(res["transformed_size"]/1024/1024))
+    print()
+    print("Client - Trapdoor generation time (ms)", "{:,.2f}".format(trapdoor_gen_time))
+    print("Client - Transformation key generation time (ms)", "{:,.2f}".format(transkey_gen_time))
+    print("Client - Decryption time (ms)", "{:,.2f}".format(decryption_time))
 

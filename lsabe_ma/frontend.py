@@ -268,12 +268,13 @@ def startup():
 
             print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
 
-            print('Executing "Decrypt(z,CTout) → M" ...')
-            for CTout in rsp['CTout']:
-                try:
-                    CTout2 = lsabe_auth.deserialize__CTout(bytes(CTout, 'utf-8'), False)
-                    msg = lsabe_auth.Decrypt(z, CTout2)
-                    print('Message: \"' + msg + '\"' )
-                except:
-                    print('Failed to decrypt a message.')
+            if nmsg>0:
+                print('Executing "Decrypt(z,CTout) → M" ...')
+                for CTout in rsp['CTout']:
+                    try:
+                        CTout2 = lsabe_auth.deserialize__CTout(bytes(CTout, 'utf-8'), False)
+                        msg = lsabe_auth.Decrypt(z, CTout2)
+                        print('Message: \"' + msg + '\"' )
+                    except:
+                        print('Failed to decrypt a message.')
 

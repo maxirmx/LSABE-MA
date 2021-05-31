@@ -198,9 +198,9 @@ def startup():
 
             print('Server response ' + str(response.status_code) + '(' + response.reason + '). ' + t)
 
-            decryption_time = 0
             if nmsg>0:
                 print('Executing "Decrypt(z,CTout) → M" ...')
+                decryption_time = 0
                 for CTout in rsp['CTout']:
                     try:
                         CTout2 = lsabe_auth.deserialize__CTout(bytes(CTout, 'utf-8'), False)
@@ -211,7 +211,6 @@ def startup():
                     except:
                         print('Failed to decrypt a message.')
                 decryption_time *= 1000
-            if nmsg>0:
                 print_evaluation_results(rsp, nmsg, trapdoor_gen_time, transkey_gen_time, decryption_time)
 
 # Delete all message files

@@ -123,6 +123,7 @@ def setup_module():
     setup_requires = [
        "setuptools", 
        "wheel",
+       "requests"
     ],
     install_requires=[
         "flask",

@@ -121,9 +121,9 @@ def setup_module():
       "Programming Language :: Python :: 3.7",
       "Topic :: Scientific/Engineering"
     ],
-    setup_requires = [
-       "setuptools", 
-       "wheel"
+    install_requires=[
+        "flask",
+        "requests",
     ],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.

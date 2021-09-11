@@ -38,7 +38,7 @@ jobs:
     - name: Install
       run: |
         sudo python setup.py build
-        python setup.py install 
+        sudo python setup.py install 
 
     - name: Run
       run: python3 -m lsabe_ma

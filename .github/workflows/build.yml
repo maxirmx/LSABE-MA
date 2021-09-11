@@ -31,12 +31,9 @@ jobs:
       with:
         python-version: '3.8' # Version range or exact version of a Python version to use, using SemVer's version range syntax
         architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-
-    - name: M
-      run: sudo apt-get install python3-requests
-             
+         
     - name: Install
-      run: sudo pip3 install . 
+      run: pip3 install . 
 
     - name: Run
       run: python3 -m lsabe_ma

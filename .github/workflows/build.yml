@@ -36,7 +36,9 @@ jobs:
       run: python -m pip install --upgrade pip setuptools wheel requests
       
     - name: Install
-      run: python setup.py install 
+      run: |
+        python setup.py build
+        python setup.py install 
 
     - name: Run
       run: python3 -m lsabe_ma

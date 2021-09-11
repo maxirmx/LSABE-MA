@@ -33,7 +33,10 @@ jobs:
 #        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
              
     - name: Install
-      run: sudo pip3 install . 
+      run: |
+        python3 --version
+        echo $LD_LIBRARY_PATH
+        sudo pip3 install . 
 
     - name: Run
       run: python3 -m lsabe_ma

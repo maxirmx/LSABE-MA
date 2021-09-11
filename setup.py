@@ -124,6 +124,10 @@ def setup_module():
        "setuptools", 
        "wheel"
     ],
+    install_requires=[
+        "requests",
+        "flask"
+    ],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.
         'build': build,

@@ -33,7 +33,7 @@ jobs:
 #        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
              
     - name: Install
-      run: export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH &&  sudo pip3 install . 
+      run: sudo pip3 install . 
 
     - name: Run
-      run: python3 -m lsabe_ma
+      run: export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH && python3 -m lsabe_ma

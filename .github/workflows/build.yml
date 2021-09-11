@@ -33,7 +33,7 @@ jobs:
         architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
              
     - name: Install
-      run: sudo pip install . --force
+      run: sudo pip install . 
 
     - name: Run
       run: python -m lsabe_ma

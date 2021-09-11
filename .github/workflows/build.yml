@@ -37,7 +37,7 @@ jobs:
       
     - name: Install
       run: |
-        python setup.py build
+        sudo python setup.py build
         python setup.py install 
 
     - name: Run

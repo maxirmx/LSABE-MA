@@ -120,6 +120,10 @@ def setup_module():
       "Programming Language :: Python :: 3.7",
       "Topic :: Scientific/Engineering"
     ],
+    setup_requires = [
+       "setuptools", 
+       "wheel"
+    ],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.
         'build': build,

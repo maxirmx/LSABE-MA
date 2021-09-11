@@ -92,7 +92,7 @@ def setup_module():
 
   root = os.path.abspath(os.path.dirname(__file__))
 
-  with io.open(os.path.join(root, "lsabe-ma", "__about__.py"), encoding="utf8") as f:
+  with io.open(os.path.join(root, "lsabe_ma", "__about__.py"), encoding="utf8") as f:
             __about__ = {}
             exec(f.read(), __about__)
 

@@ -49,7 +49,7 @@ CUSTOM_COMMANDS = [
                     ['tar', '-xvf', 'pbc-0.5.14.tar.gz'],
                     ['sh', '-c', 'cd pbc-0.5.14 && ./configure'],
                     ['sh', '-c', 'cd pbc-0.5.14 && make'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && make install'],
+                    ['sh', '-c', 'cd pbc-0.5.14 && sudo make install'],
                     ['rm', 'pbc-0.5.14.tar.gz'],
                     ['rm', '-rf', 'pbc-0.5.14'],
 # Charm crypto                     
@@ -57,7 +57,7 @@ CUSTOM_COMMANDS = [
                     ['git', 'clone', 'https://github.com/JHUISI/charm.git'],
                     ['sh', '-c', 'cd charm && ./configure.sh'],
                     ['sh', '-c', 'cd charm && make'],
-                    ['sh', '-c', 'cd charm && make install'],
+                    ['sh', '-c', 'cd charm && sudo make install'],
                     ['rm', '-rf', 'charm']
                   ]
 

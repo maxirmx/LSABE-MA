@@ -2,7 +2,8 @@ import io
 import os
 import sys
 import subprocess
-from setuptools import setup, find_packages
+import setuptools
+from setuptools import setup, find_packages, command
 from distutils.command.build import build as _build
 
 # https://github.com/apache/beam/blob/master/sdks/python/apache_beam/examples/complete/juliaset/setup.py

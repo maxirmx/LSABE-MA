@@ -41,4 +41,4 @@ jobs:
         sudo python setup.py install 
 
     - name: Run
-      run: python3 -m lsabe_ma
+      run: sudo python3 -m lsabe_ma

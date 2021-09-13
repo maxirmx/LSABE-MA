@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-       LD_LIBRARY_PATH: /usr/local/bin:${{ env.LD_LIBRARY_PATH }}
+       LD_LIBRARY_PATH: /usr/local/bin
 
     steps:
     - name: Checkout LSABE_MA

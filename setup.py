@@ -48,7 +48,7 @@ CUSTOM_COMMANDS = [
                     ['rm', '-rf', 'pbc-0.5.14'],
                     ['wget', 'https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz'],
                     ['tar', '-xvf', 'pbc-0.5.14.tar.gz'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && ./configure --prefix=$pythonLocation'],
+                    ['sh', '-c', 'cd pbc-0.5.14 && ./configure --prefix=/opt/hostedtoolcache/Python/3.8.11/x64'],
                     ['sh', '-c', 'cd pbc-0.5.14 && make'],
                     ['sh', '-c', 'cd pbc-0.5.14 && make install'],
                     ['rm', 'pbc-0.5.14.tar.gz'],
@@ -56,7 +56,7 @@ CUSTOM_COMMANDS = [
 # Charm crypto                     
                     ['rm', '-rf', 'charm'],
                     ['git', 'clone', 'https://github.com/JHUISI/charm.git'],
-                    ['sh', '-c', 'cd charm && ./configure.sh --prefix=$pythonLocation'],
+                    ['sh', '-c', 'cd charm && ./configure.sh --prefix=/opt/hostedtoolcache/Python/3.8.11/x64'],
                     ['sh', '-c', 'cd charm && make'],
                     ['sh', '-c', 'cd charm && make install'],
                     ['rm', '-rf', 'charm']

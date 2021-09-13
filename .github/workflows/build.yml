@@ -22,7 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-       LD_LIBRARY_PATH: /usr/local/lib
+       LD_LIBRARY_PATH: $HOME/charm-crypto/lib 
+       CPATH: $HOME/charm-crypto/include
 
     steps:
     - name: Checkout LSABE_MA
@@ -40,8 +41,8 @@ jobs:
       
     - name: Install
       run: |
-        sudo python setup.py build
-        sudo python setup.py install 
+        python setup.py build
+        python setup.py install 
 
     - name: Run
-      run: sudo python3 -m lsabe_ma
+      run: python3 -m lsabe_ma

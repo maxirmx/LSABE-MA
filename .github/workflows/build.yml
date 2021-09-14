@@ -33,7 +33,9 @@ jobs:
         architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
 
     - name: Install and upgrade tools
-      run: ${{ env.pythonLocation }}\python -m pip install --upgrade pip setuptools wheel requests
+      run: |
+        ls -l ${{ env.pythonLocation }}
+        ${{ env.pythonLocation }}\python -m pip install --upgrade pip setuptools wheel requests
       
     - name: Install
       run: sudo ${{ env.pythonLocation }}\python setup.py install 

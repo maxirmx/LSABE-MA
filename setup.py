@@ -45,12 +45,9 @@ class build(_build):  # pylint: disable=invalid-name
 
 CUSTOM_COMMANDS = [ 
 # PBC
-                    ['scripts/clean-pbc.sh'],
-                    ['scripts/ensure-pbc.sh'],
-                    ['scripts/clean-pbc.sh'],
+                    ['scripts/ensure-pbc.sh', '$pythonLocation'],
 # Charm crypto                     
-                    ['rm', '-rf', 'charm'],
-                    ['scripts/ensure-charm.sh']
+                    ['scripts/ensure-charm.sh','$pythonLocation'],
                   ]
 
 class CustomCommands(setuptools.Command):
@@ -115,6 +112,7 @@ def setup_module():
     install_requires=[
         "flask",
         "requests",
+        "argparse",
     ],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.

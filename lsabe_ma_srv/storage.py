@@ -4,6 +4,7 @@ import time
 import pathlib
 import random
 import string
+import sqlite3
 
 from flask import Flask, request, jsonify
 from lsabe_ma.lsabe_ma import LSABE_MA
@@ -25,7 +26,15 @@ def create_app():
 
     dir_create(data_path)
     data = set()
-
+    
+    try:
+        sqlite_connection = sqlite3.connect('sqlite_python.db')
+        cursor = sqlite_connection.cursor()
+    except sqlite3.Error as error:
+        print("Database connect error:", error)
+        if (sqlite_connection):
+           sqlite_connection.close()
+        exit(-1)
 
     try:
         msg_files = [f for f in os.listdir(str(data_path)) if f.endswith('.ciphertext')]
@@ -40,11 +49,24 @@ def create_app():
 
         print(str(numfiles) + ' encrypted messages loaded')
     except:
-        print('Failed to load messages from file storage')
-        exit (-1)
+        print ('Failed to load messages from file storage')
+        exit(-1)
 
 
 
+
+    def shutdown_server():
+      func = request.environ.get('werkzeug.server.shutdown')
+      if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+      func()
+    
+    # ------------------------------------------------
+    # Heartbeat 
+    @app.route('/shutdown', methods=['GET'])
+    def shutdown():
+       shutdown_server()
+    return 'Server shutting down...'
     # ------------------------------------------------
     # Heartbeat 
     @app.route('/heartbeat')

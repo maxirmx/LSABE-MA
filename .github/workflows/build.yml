@@ -35,9 +35,9 @@ jobs:
    
     - name: Pre-install
       run:  pip install wheel
-      
+
     - name: Install
-      run: pip install .
+      run: python setup.py build
 
     - name: Run
       run: python -m lsabe_ma

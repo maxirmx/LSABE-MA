@@ -36,7 +36,7 @@ jobs:
       run: ${{ env.pythonLocation }}/bin/python -m pip install --upgrade pip setuptools wheel requests
       
     - name: Install
-      run: sudo ${{ env.pythonLocation }}/bin/python setup.py install .
+      run: sudo ${{ env.pythonLocation }}/bin/python -m pip install .
 
     - name: Run
       run: env LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH ${{ env.pythonLocation }}/bin/python -m lsabe_ma

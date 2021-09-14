@@ -37,7 +37,9 @@ jobs:
       run:  pip install wheel
 
     - name: Install
-      run: python setup.py build
+      run: | 
+        python setup.py build
+        python setup.py install
 
     - name: Run
       run: python -m lsabe_ma

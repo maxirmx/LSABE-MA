@@ -20,7 +20,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    env:
+      C_INCLUDE_PATH: /usr/local/include
     steps:
     - name: Checkout LSABE_MA
       uses: actions/checkout@v2
@@ -38,7 +39,8 @@ jobs:
     - name: Install
       run: |
         ls /usr/local/include
-        sudo export C_INCLUDE_PATH=/usr/local/include:$C_INCLUDE_PATH && ${{ env.pythonLocation }}/bin/python -m pip install .
+        echo $C_INCLUDE_PATH
+        sudo ${{ env.pythonLocation }}/bin/python -m pip install .
 
     - name: Run
       run: env LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH ${{ env.pythonLocation }}/bin/python -m lsabe_ma

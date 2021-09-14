@@ -21,10 +21,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    env:
-       LD_LIBRARY_PATH: $HOME/charm-crypto/lib 
-       CPATH: $HOME/charm-crypto/include
-
     steps:
     - name: Checkout LSABE_MA
       uses: actions/checkout@v2
@@ -40,9 +36,7 @@ jobs:
       run: python -m pip install --upgrade pip setuptools wheel requests
       
     - name: Install
-      run: |
-        python setup.py build
-        python setup.py install 
+      run: sudo python setup.py install 
 
     - name: Run
       run: python3 -m lsabe_ma

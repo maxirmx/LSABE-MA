@@ -45,21 +45,12 @@ class build(_build):  # pylint: disable=invalid-name
 
 CUSTOM_COMMANDS = [ 
 # PBC
-                    ['rm', '-rf', 'pbc-0.5.14'],
-                    ['wget', 'https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz'],
-                    ['tar', '-xvf', 'pbc-0.5.14.tar.gz'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && ./configure --prefix=$HOME/charm-crypto'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && make'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && make install'],
-                    ['rm', 'pbc-0.5.14.tar.gz'],
-                    ['rm', '-rf', 'pbc-0.5.14'],
+                    ['scripts/clean-pbc.sh'],
+                    ['scripts/ensure-pbc.sh'],
+                    ['scripts/clean-pbc.sh'],
 # Charm crypto                     
                     ['rm', '-rf', 'charm'],
-                    ['git', 'clone', 'https://github.com/JHUISI/charm.git'],
-                    ['sh', '-c', 'cd charm && ./configure.sh --prefix=$HOME/charm-crypto'],
-                    ['sh', '-c', 'cd charm && make'],
-                    ['sh', '-c', 'cd charm && make install'],
-                    ['rm', '-rf', 'charm']
+                    ['scripts/ensure-charm.sh']
                   ]
 
 class CustomCommands(setuptools.Command):

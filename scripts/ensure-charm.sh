@@ -9,11 +9,13 @@
     ./configure.sh 
 
     if [ -n "$1" ]; then
-       env C_INCLUDE_PATH=$1/include:$C_INCLUDE_PATH \
-           LIBRARY_PATH=$1/lib:$LIBRARY_PATH         \
-           make install
+      echo Linking pbc from $pythonLocation
+      env C_INCLUDE_PATH=$1/include:$C_INCLUDE_PATH \
+          LIBRARY_PATH=$1/lib:$LIBRARY_PATH         \
+          make install
     else
-           make install
+      echo Linking pbc from /usr/local
+      make install
     fi
     cd ..
     rm -rf charm

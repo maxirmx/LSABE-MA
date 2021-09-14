@@ -45,9 +45,9 @@ class build(_build):  # pylint: disable=invalid-name
 
 CUSTOM_COMMANDS = [ 
 # PBC
-                    ['scripts/ensure-pbc.sh', '$pythonLocation'],
+                    ['scripts/ensure-pbc.sh'],
 # Charm crypto                     
-                    ['scripts/ensure-charm.sh','$pythonLocation'],
+                    ['scripts/ensure-charm.sh']
                   ]
 
 class CustomCommands(setuptools.Command):

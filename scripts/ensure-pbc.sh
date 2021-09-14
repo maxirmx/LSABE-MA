@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $1 - python location or empty/unset
+#  $pythonLocation - python location or empty/unset
 #  like /opt/hostedtoolcache/Python/3.8.11/x64
 #
 
@@ -15,9 +15,11 @@ rm -rf pbc-0.5.14
 tar -xvf pbc-0.5.14.tar.gz
 cd pbc-0.5.14
 
-if [ -n "$1" ]; then
-  ./configure --prefix=$1
+if [ -n "$pythonLocation" ]; then
+  echo Deploying pbc to $pythonLocation
+  ./configure --prefix=$pythonLocation
 else
+  echo Deploying pbc to /usr/local
   ./configure
 fi
 

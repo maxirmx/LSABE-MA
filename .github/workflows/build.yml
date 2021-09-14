@@ -20,8 +20,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      C_INCLUDE_PATH: /usr/local/include
+    
     steps:
     - name: Checkout LSABE_MA
       uses: actions/checkout@v2

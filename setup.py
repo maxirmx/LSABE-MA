@@ -74,6 +74,7 @@ class CustomCommands(setuptools.Command):
           'Command %s failed: exit code: %s' % (command_list, p.returncode))
 
   def run(self):
+    print('Running ...')
     for command in CUSTOM_COMMANDS:
       self.RunCustomCommand(command)
 
@@ -118,7 +119,7 @@ def setup_module():
         # Command class instantiated and run during pip install scenarios.
         'build': build,
         'CustomCommands': CustomCommands,
-    }
+    },
   )
 
 if __name__ == "__main__":

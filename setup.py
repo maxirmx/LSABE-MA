@@ -2,7 +2,8 @@ import io
 import os
 import sys
 import subprocess
-from setuptools import setup, find_packages
+import setuptools
+from setuptools import setup, find_packages, command
 from distutils.command.build import build as _build
 
 # https://github.com/apache/beam/blob/master/sdks/python/apache_beam/examples/complete/juliaset/setup.py
@@ -44,21 +45,9 @@ class build(_build):  # pylint: disable=invalid-name
 
 CUSTOM_COMMANDS = [ 
 # PBC
-                    ['rm', '-rf', 'pbc-0.5.14'],
-                    ['wget', 'https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz'],
-                    ['tar', '-xvf', 'pbc-0.5.14.tar.gz'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && ./configure'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && make'],
-                    ['sh', '-c', 'cd pbc-0.5.14 && make install'],
-                    ['rm', 'pbc-0.5.14.tar.gz'],
-                    ['rm', '-rf', 'pbc-0.5.14'],
+                    ['scripts/ensure-pbc.sh'],
 # Charm crypto                     
-                    ['rm', '-rf', 'charm'],
-                    ['git', 'clone', 'https://github.com/JHUISI/charm.git'],
-                    ['sh', '-c', 'cd charm && ./configure.sh'],
-                    ['sh', '-c', 'cd charm && make'],
-                    ['sh', '-c', 'cd charm && make install'],
-                    ['rm', '-rf', 'charm']
+                    ['scripts/ensure-charm.sh']
                   ]
 
 class CustomCommands(setuptools.Command):
@@ -79,12 +68,13 @@ class CustomCommands(setuptools.Command):
     # Can use communicate(input='y\n'.encode()) if the command run requires
     # some confirmation.
     stdout_data, _ = p.communicate()
-    print('Command output: %s' % stdout_data)
+    print('Command output: %s' % stdout_data.decode('utf-8'))
     if p.returncode != 0:
       raise RuntimeError(
           'Command %s failed: exit code: %s' % (command_list, p.returncode))
 
   def run(self):
+    print('Running ...')
     for command in CUSTOM_COMMANDS:
       self.RunCustomCommand(command)
 
@@ -92,7 +82,7 @@ def setup_module():
 
   root = os.path.abspath(os.path.dirname(__file__))
 
-  with io.open(os.path.join(root, "lsabe-ma", "__about__.py"), encoding="utf8") as f:
+  with io.open(os.path.join(root, "lsabe_ma", "__about__.py"), encoding="utf8") as f:
             __about__ = {}
             exec(f.read(), __about__)
 
@@ -120,11 +110,16 @@ def setup_module():
       "Programming Language :: Python :: 3.7",
       "Topic :: Scientific/Engineering"
     ],
+    install_requires=[
+        "flask",
+        "requests",
+        "argparse",
+    ],
     cmdclass={
         # Command class instantiated and run during pip install scenarios.
         'build': build,
         'CustomCommands': CustomCommands,
-    }
+    },
   )
 
 if __name__ == "__main__":

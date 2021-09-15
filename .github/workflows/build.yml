@@ -1,4 +1,4 @@
-name: Ubuntu build (backbone only)
+name: Build
 
 on:
   push:
@@ -20,11 +20,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout LSABE_MA
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8' # Version range or exact version of a Python version to use, using SemVer's version range syntax
         architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-    - run: python my_script.py
+
+   
+    - name: Pre-install
+      run:  pip install wheel
+
+    - name: Install
+      run: | 
+        python setup.py build
+        python setup.py install
+
+    - name: Run
+      run: python -m lsabe_ma

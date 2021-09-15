@@ -1,5 +1,5 @@
 __name__ = "lsabe_ma"
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __summary__ = "LSABE-MA algorithm"
 __uri__ = "https://github.com/maxirmx/LSABE-MA"
 __author__ = "Maxim Samsonov"

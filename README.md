@@ -1,5 +1,9 @@
 # LSABE-MA
 
+Lightweight Searchable Encryption Protocol for Industrial Internet of Things - Multi Authority 
+This is an implementation of LSABE-MA protocol as described in https://ieeexplore.ieee.org/document/9158514.  
+LSABE-MA is based on https://github.com/maxirmx/LSABE[LSABE implementation].
+
 ## General information
 
 This version employs single unified codebase to implement LSABE-MA client and LSABE-MA server.

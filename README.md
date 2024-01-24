@@ -2,13 +2,13 @@
 
 Lightweight Searchable Encryption Protocol for Industrial Internet of Things - Multi Authority 
 This is an implementation of LSABE-MA protocol as described in https://ieeexplore.ieee.org/document/9158514.  
-LSABE-MA is based on https://github.com/maxirmx/LSABE[LSABE implementation].
+LSABE-MA is based on [LSABE implementation](https://github.com/maxirmx/LSABE).
 
 ## General information
 
 This version employs single unified codebase to implement LSABE-MA client and LSABE-MA server.
-LSABE-MA server is implemented using https://flask.palletsprojects.com/en/2.0.x/quickstart/[flask] . Please install it with pip at the system where server will be running: ```pip install flask```
-LSABE-MA client is based on https://docs.python-requests.org/en/master/[requests module].  Please install it with pip at the system where client will be running: ```pip install requests```
+LSABE-MA server is implemented using [flask](https://flask.palletsprojects.com/en/2.0.x/quickstart) . Please install it with pip at the system where server will be running: ```pip install flask```
+LSABE-MA client is based on [requests module](https://docs.python-requests.org/en/master).  Please install it with pip at the system where client will be running: ```pip install requests```
 
 ## The server
 ### Functions
